@@ -1,0 +1,47 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Table Management";
+}
+
+<h1>🍽️ Table Management</h1>
+
+<!-- Formulário para criar uma nova mesa -->
+<form method="post">
+    <h3>Create New Table</h3>
+    
+    <div style="margin-bottom: 10px;">
+        <label for="TableNumber">Table Number:</label><br>
+        <input id="TableNumber" name="TableNumber" value="@Model.TableNumber" placeholder="Ex: 5" />
+        <span asp-validation-for="TableNumber"></span>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label for="TableSeats">Seats:</label><br>
+        <input id="TableSeats" name="TableSeats" type="number" value="@Model.TableSeats" placeholder="Ex: 4" />
+    </div>
+    
+    <button type="submit" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
+        Create Table
+    </button>
+</form>
+
+<hr>
+
+<!-- Lista de todas as mesas -->
+<h2>📋 All the Tables</h2>
+@if (Model.TablesList.Any())
+{
+    <ul style="list-style-type: none; padding: 0;">
+        @foreach (var table in Model.TablesList)
+        {
+            <li style="background-color: #f8f9fa; margin: 5px 0; padding: 10px; border-radius: 5px; border-left: 4px solid #007bff;">
+                <strong>Table #@table.Number</strong> - @table.Seats Seats
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p style="color: #6c757d; font-style: italic;">Ainda não há mesas criadas.</p>
+}

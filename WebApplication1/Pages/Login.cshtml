@@ -1,0 +1,12 @@
+﻿@page
+@model DTMS.Pages.LoginModel
+@{
+}
+
+<form method="post">
+    <p>Name</p><input asp-for="User.Username"/>
+    <p>Password</p><input asp-for="User.Password" type="password" />
+    <input type="submit" value="Login" />
+</form>
+
+<p>@ViewData["Message"]</p>
