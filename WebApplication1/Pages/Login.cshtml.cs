@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging.EventLog;
 using System.Diagnostics.Eventing.Reader;
-using DTMS.Models;
+using DTMS.Data.Models;
 
 namespace DTMS.Pages
 {
@@ -10,14 +10,14 @@ namespace DTMS.Pages
     {
         [BindProperty]
 
-        public User User { get; set; }
+        public user User { get; set; }
         public void OnGet()
         {
         }
 
         public ActionResult OnPost()
         {
-            if (User.Username == "user" && User.Password=="password")
+            if (User.user1 == "user" && User.password=="password")
             {
                 return new RedirectToPageResult("Index");
             }
