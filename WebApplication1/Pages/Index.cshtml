@@ -21,6 +21,16 @@
         <input id="TableSeats" name="TableSeats" type="number" value="@Model.TableSeats" placeholder="Ex: 4" />
     </div>
 
+    <div style="margin-bottom: 15px;">
+        <label for="TableStatus">Status:</label><br>
+        <select id="TableStatus" name="TableStatus">
+            <option value="Available">Available</option>
+            <option value="Occupied">Occupied</option>
+            <option value="Reserved">Reserved</option>
+            <option value="OutOfService">OutOfService</option>
+        </select>
+    </div>
+
     <button type="submit" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
         Create Table
     </button>
@@ -37,6 +47,7 @@
             <li style="background-color: #f8f9fa; margin: 5px 0; padding: 10px; border-radius: 5px; border-left: 4px solid #007bff; display:flex; align-items:center; justify-content:space-between;">
                 <div>
                     <strong>Table #@table.number</strong> - @table.seats Seats
+                    <span style="@Model.GetStatusBadgeStyle(table.status)">@(table.status ?? "Available")</span>
                 </div>
                 <div>
                     <!-- Edit -->

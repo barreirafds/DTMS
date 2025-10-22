@@ -15,7 +15,7 @@ namespace DTMS.Data
             using var conn = new MySqlConnection(connString);
             conn.Open();
 
-            const string query = "SELECT `id`, `number`, `seats` FROM `table` ORDER BY `id`;";
+            const string query = "SELECT `id`, `number`, `seats`, `status` FROM `table` ORDER BY `id`;";
             using var cmd = new MySqlCommand(query, conn);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
@@ -24,7 +24,8 @@ namespace DTMS.Data
                 {
                     id = reader.GetInt32("id"),
                     number = reader.GetInt32("number"),
-                    seats = reader.GetInt32("seats")
+                    seats = reader.GetInt32("seats"),
+                    status = reader.GetString("status")
                 });
             }
             return tables;
@@ -35,7 +36,7 @@ namespace DTMS.Data
             using var conn = new MySqlConnection(connString);
             conn.Open();
 
-            const string query = "SELECT `id`, `number`, `seats` FROM `table` WHERE `id`=@id;";
+            const string query = "SELECT `id`, `number`, `seats`, `status` FROM `table` WHERE `id`=@id;";
             using var cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@id", id);
 
@@ -46,21 +47,23 @@ namespace DTMS.Data
                 {
                     id = reader.GetInt32("id"),
                     number = reader.GetInt32("number"),
-                    seats = reader.GetInt32("seats")
+                    seats = reader.GetInt32("seats"),
+                    status = reader.GetString("status")
                 };
             }
             return null;
         }
 
-        public void CreateTable(int number, int seats)
+        public void CreateTable(int number, int seats, string status)
         {
             using var conn = new MySqlConnection(connString);
             conn.Open();
 
-            const string query = "INSERT INTO `table` (`number`, `seats`) VALUES (@number, @seats);";
+            const string query = "INSERT INTO `table` (`number`, `seats`, `status`) VALUES (@number, @seats, @status);";
             using var cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@number", number);
             cmd.Parameters.AddWithValue("@seats", seats);
+            cmd.Parameters.AddWithValue("@status", status);
             cmd.ExecuteNonQuery();
         }
 
@@ -69,10 +72,11 @@ namespace DTMS.Data
             using var conn = new MySqlConnection(connString);
             conn.Open();
 
-            const string query = "UPDATE `table` SET `number`=@number, `seats`=@seats WHERE `id`=@id;";
+            const string query = "UPDATE `table` SET `number`=@number, `seats`=@seats, `status`=@status WHERE `id`=@id;";
             using var cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@number", t.number);
             cmd.Parameters.AddWithValue("@seats", t.seats);
+            cmd.Parameters.AddWithValue("@status", t.status);
             cmd.Parameters.AddWithValue("@id", t.id);
             cmd.ExecuteNonQuery();
         }

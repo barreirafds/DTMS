@@ -22,6 +22,17 @@
         <span asp-validation-for="Table.seats"></span>
     </div>
 
+    <div style="margin-bottom:10px;">
+        <label asp-for="Table.status"></label><br />
+        <select asp-for="Table.status">
+            <option value="Available">Available</option>
+            <option value="Occupied">Occupied</option>
+            <option value="Reserved">Reserved</option>
+            <option value="OutOfService">OutOfService</option>
+        </select>
+        <span asp-validation-for="Table.status"></span>
+    </div>
+
     <div asp-validation-summary="All"></div>
 
     <button type="submit" style="background:#28a745;color:white;padding:8px 16px;border:none;border-radius:6px;">Save</button>
