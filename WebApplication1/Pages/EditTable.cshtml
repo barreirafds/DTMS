@@ -1,0 +1,33 @@
+﻿@page "{id:int}"
+@model DTMS.Pages.EditTableModel
+@{
+    ViewData["Title"] = "Edit Table";
+}
+
+<h1>✏️ Edit Table</h1>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Table.id" />
+
+    <div style="margin-bottom:10px;">
+        <label asp-for="Table.number"></label><br />
+        <input asp-for="Table.number" />
+        <span asp-validation-for="Table.number"></span>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label asp-for="Table.seats"></label><br />
+        <input asp-for="Table.seats" type="number" />
+        <span asp-validation-for="Table.seats"></span>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+
+    <button type="submit" style="background:#28a745;color:white;padding:8px 16px;border:none;border-radius:6px;">Save</button>
+    <a asp-page="/Index" style="margin-left:10px;">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

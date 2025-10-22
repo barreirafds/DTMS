@@ -1,16 +1,14 @@
+using DTMS.Data;
+using DTMS.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using DTMS.Data.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace DTMS.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public IndexModel(AppDbContext db) => _db = db;
-
-        [BindProperty]  
+        [BindProperty, Required(ErrorMessage = "Number of the table is required")]
         public string TableNumber { get; set; } = string.Empty;
 
         [BindProperty]
@@ -20,34 +18,34 @@ namespace DTMS.Pages
 
         public async Task OnGet()
         {
-            TablesList = await _db.tables.OrderBy(t => t.id).ToListAsync();
+            TablesList = new tableconn().GetTables();
         }
 
         public async Task<IActionResult> OnPost()
         {
-            if (string.IsNullOrWhiteSpace(TableNumber))
+            if (!int.TryParse(TableNumber, out var number))
             {
-                ModelState.AddModelError(nameof(TableNumber), "You need to write a number for the Table");
+                ModelState.AddModelError(nameof(TableNumber), "Table Number needs to be a number.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TablesList = new tableconn().GetTables();
                 return Page();
             }
 
-            int nextId = (_db.tables.Max(t => (int?)t.id) ?? 0) + 1;
-
-            var newTable = new table
-            {
-                id = nextId, // Assuming 'id' is auto-generated
-                number = int.Parse(TableNumber),
-                seats = TableSeats
-            };
-
-            await _db.tables.AddAsync(newTable);
-            await _db.SaveChangesAsync();
-
-            // Limpa o formulário (opcional)
-            TableNumber = string.Empty;
-            TableSeats = 0;
+            var tc = new tableconn();
+            tc.CreateTable(number, TableSeats);
 
             return RedirectToPage();
         }
+
+        public IActionResult OnPostDelete(int id)
+        {
+            var tc = new tableconn();
+            tc.DeleteTable(id);
+            return RedirectToPage();
+        }
+
     }
 }

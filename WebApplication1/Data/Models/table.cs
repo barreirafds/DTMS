@@ -10,4 +10,7 @@ public partial class table
     public int number { get; set; }
 
     public int seats { get; set; }
+
+    public string status { get; set; }
+
 }
