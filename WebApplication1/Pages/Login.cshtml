@@ -1,12 +1,54 @@
 ﻿@page
 @model DTMS.Pages.LoginModel
 @{
+    ViewData["Title"] = "Login";
 }
 
-<form method="post">
-    <p>Name</p><input asp-for="User.user1"/>
-    <p>Password</p><input asp-for="User.password" type="password" />
-    <input type="submit" value="Login" />
-</form>
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <h2 class="text-center mb-4">Login</h2>
+        
+        @if (ViewData["Message"] != null)
+        {
+            <div class="alert alert-danger">
+                @ViewData["Message"]
+            </div>
+        }
 
-<p>@ViewData["Message"]</p>
+        <form method="post">
+            @Html.AntiForgeryToken()
+            
+            <div class="mb-3">
+                <label for="User_user1" class="form-label">Username</label>
+                <input type="text" class="form-control" 
+                       id="User_user1" name="User.user1" asp-for="User.user1" 
+                       required autofocus>
+                <span asp-validation-for="User.user1" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label for="User_password" class="form-label">Password</label>
+                <input type="password" class="form-control" 
+                       id="User_password" name="User.password" asp-for="User.password" 
+                       required>
+                <span asp-validation-for="User.password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="rememberMe">
+                <label class="form-check-label" for="rememberMe">
+                    Remember me
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+
+            <div class="text-center">
+                <p class="mb-0">
+                    Don't have an account? 
+                    <a asp-page="/Register">Register</a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>

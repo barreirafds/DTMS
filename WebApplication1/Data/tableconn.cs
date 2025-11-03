@@ -9,6 +9,7 @@ namespace DTMS.Data
     {
         public string connString = "server=localhost;port=3306;database=dtms;user=root;password=root;";
 
+        public List<table> tables2 = new List<table>();
         public List<table> GetTables()
         {
             var tables = new List<table>();

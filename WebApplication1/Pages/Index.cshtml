@@ -1,69 +1,434 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Table Management";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<h1>🍽️ Table Management</h1>
-
-<form method="post">
-    @Html.AntiForgeryToken()
-    <h3>Create New Table</h3>
-
-    <div style="margin-bottom: 10px;">
-        <label for="TableNumber">Table Number:</label><br>
-        <input id="TableNumber" name="TableNumber" value="@Model.TableNumber" placeholder="Ex: 5" />
-        <span asp-validation-for="TableNumber"></span>
+<div class="admin-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-speedometer2"></i> Admin Dashboard
+        </h1>
     </div>
 
-    <div style="margin-bottom: 15px;">
-        <label for="TableSeats">Seats:</label><br>
-        <input id="TableSeats" name="TableSeats" type="number" value="@Model.TableSeats" placeholder="Ex: 4" />
-    </div>
-
-    <div style="margin-bottom: 15px;">
-        <label for="TableStatus">Status:</label><br>
-        <select id="TableStatus" name="TableStatus">
-            <option value="Available">Available</option>
-            <option value="Occupied">Occupied</option>
-            <option value="Reserved">Reserved</option>
-            <option value="OutOfService">OutOfService</option>
-        </select>
-    </div>
-
-    <button type="submit" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
-        Create Table
-    </button>
-</form>
-
-<hr>
-
-<h2>📋 All the Tables</h2>
-@if (Model.TablesList.Any())
-{
-    <ul style="list-style-type: none; padding: 0;">
-        @foreach (var table in Model.TablesList)
-        {
-            <li style="background-color: #f8f9fa; margin: 5px 0; padding: 10px; border-radius: 5px; border-left: 4px solid #007bff; display:flex; align-items:center; justify-content:space-between;">
-                <div>
-                    <strong>Table #@table.number</strong> - @table.seats Seats
-                    <span style="@Model.GetStatusBadgeStyle(table.status)">@(table.status ?? "Available")</span>
-                </div>
-                <div>
-                    <!-- Edit -->
-                    <a asp-page="/EditTable" asp-route-id="@table.id" title="Edit" style="margin-right:10px; text-decoration:none;">✏️edit</a>
-
-                    <!-- Delete -->
-                    <form method="post" asp-page-handler="Delete" asp-route-id="@table.id" style="display:inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" title="Delete">🗑️delete</button>
-                    </form>
-                </div>
-            </li>
-        }
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tables-tab" data-bs-toggle="tab" data-bs-target="#tables" type="button" role="tab">
+                <i class="bi bi-table"></i> Tables
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                <i class="bi bi-people"></i> Users
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
+                <i class="bi bi-box-seam"></i> Products
+            </button>
+        </li>
     </ul>
-}
-else
-{
-    <p style="color: #6c757d; font-style: italic;">Theres no Tables yet.</p>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Tables Tab -->
+        <div class="tab-pane fade show active" id="tables" role="tabpanel">
+            <div class="row">
+                <!-- Create Table Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Table</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                @Html.AntiForgeryToken()
+                                
+                                <div class="mb-3">
+                                    <label for="TableNumber" class="form-label">Table Number</label>
+                                    <input type="text" class="form-control" id="TableNumber" name="TableNumber" 
+                                           value="@Model.TableNumber" placeholder="Ex: 5" required>
+                                    <span asp-validation-for="TableNumber" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="TableSeats" class="form-label">Number of Seats</label>
+                                    <input type="number" class="form-control" id="TableSeats" name="TableSeats" 
+                                           value="@Model.TableSeats" placeholder="Ex: 4" min="1" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="TableStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="TableStatus" name="TableStatus">
+                                        <option value="Available">Available</option>
+                                        <option value="Occupied">Occupied</option>
+                                        <option value="Reserved">Reserved</option>
+                                        <option value="OutOfService">Out of Service</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle"></i> Create Table
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Tables</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.TablesList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Table #</th>
+                                                <th>Seats</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var table in Model.TablesList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@table.number</strong></td>
+                                                    <td>@table.seats</td>
+                                                    <td>
+                                                        <span class="badge" style="@Model.GetStatusBadgeStyle(table.status)">
+                                                            @(table.status ?? "Available")
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a asp-page="/EditTable" asp-route-id="@table.id" 
+                                                           class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form method="post" asp-page-handler="Delete" asp-route-id="@table.id" 
+                                                              style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this table?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No tables created yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="row">
+                <!-- Create User Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-person-plus"></i> Create New User</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="CreateUser">
+                                @Html.AntiForgeryToken()
+                                
+                                <div class="mb-3">
+                                    <label for="UserName" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="UserName" name="UserName" 
+                                           value="@Model.UserName" placeholder="Enter username" required>
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="Password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="Password" name="Password" 
+                                           value="@Model.Password" placeholder="Enter password" required>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="UserRole" class="form-label">Role</label>
+                                    <select class="form-select" id="UserRole" name="UserRole" required>
+                                        <option value="">Select a role</option>
+                                        <option value="Admin" selected="@(Model.UserRole == "Admin")">Admin</option>
+                                        <option value="Employee" selected="@(Model.UserRole == "Employee")">Employee</option>
+                                        <option value="Waiter" selected="@(Model.UserRole == "Waiter")">Waiter</option>
+                                        <option value="Manager" selected="@(Model.UserRole == "Manager")">Manager</option>
+                                    </select>
+                                    <span asp-validation-for="UserRole" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-person-plus"></i> Create User
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-people"></i> All Users</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.UsersList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Username</th>
+                                                <th>Role</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var user in Model.UsersList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@user.id</strong></td>
+                                                    <td>@user.user1</td>
+                                                    <td>
+                                                        <span class="badge bg-success">@user.role</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (user.id.HasValue)
+                                                        {
+                                                            <form method="post" asp-page-handler="DeleteUser" asp-route-id="@user.id.Value" 
+                                                                  style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No users created yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div class="tab-pane fade" id="products" role="tabpanel">
+            <div class="row">
+                <!-- Create Product Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Add New Product</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="CreateProduct">
+                                @Html.AntiForgeryToken()
+                                
+                                <div class="mb-3">
+                                    <label for="ProductName" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="ProductName" name="ProductName" 
+                                           value="@Model.ProductName" placeholder="Enter product name" required>
+                                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="ProductDescription" name="ProductDescription" 
+                                              rows="3" placeholder="Enter product description">@Model.ProductDescription</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductPrice" class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="ProductPrice" name="ProductPrice" 
+                                               value="@Model.ProductPrice" placeholder="0.00" step="0.01" min="0" required>
+                                    </div>
+                                    <span asp-validation-for="ProductPrice" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductCategory" class="form-label">Category</label>
+                                    <select class="form-select" id="ProductCategory" name="ProductCategory" required>
+                                        <option value="">Select a category</option>
+                                        <option value="Food" selected="@(Model.ProductCategory == "Food")">Food</option>
+                                        <option value="Beverage" selected="@(Model.ProductCategory == "Beverage")">Beverage</option>
+                                        <option value="Dessert" selected="@(Model.ProductCategory == "Dessert")">Dessert</option>
+                                        <option value="Appetizer" selected="@(Model.ProductCategory == "Appetizer")">Appetizer</option>
+                                    </select>
+                                    <span asp-validation-for="ProductCategory" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-warning w-100 text-dark">
+                                    <i class="bi bi-box-seam"></i> Add Product
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Products</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.ProductsList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                                <th>Price</th>
+                                                <th>Category</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var product in Model.ProductsList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@product.id</strong></td>
+                                                    <td><strong>@product.name</strong></td>
+                                                    <td>@(product.description ?? "-")</td>
+                                                    <td><strong>$@product.price.ToString("F2")</strong></td>
+                                                    <td>
+                                                        <span class="badge bg-warning text-dark">@product.category</span>
+                                                    </td>
+                                                    <td>
+                                                        <form method="post" asp-page-handler="DeleteProduct" asp-route-id="@product.id" 
+                                                              style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No products created yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-dashboard {
+        padding: 20px 0;
+    }
+
+    .nav-tabs .nav-link {
+        color: #495057;
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-bottom-color: #dee2e6;
+        color: #007bff;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #007bff;
+        border-bottom-color: #007bff;
+        background-color: transparent;
+    }
+
+    .card {
+        border: none;
+        border-radius: 8px;
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        font-weight: 600;
+    }
+
+    .table th {
+        font-weight: 600;
+        border-top: none;
+        color: #495057;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .alert {
+        border-radius: 6px;
+    }
+
+    .bi {
+        margin-right: 5px;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

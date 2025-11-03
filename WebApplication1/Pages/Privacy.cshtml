@@ -3,8 +3,122 @@
 @{
     ViewData["Title"] = "Dashboard";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<h1 class="mb-4">@ViewData["Title"]</h1>
 
-<!-- @foreach (var table in ) // I want to show the tables that are on the admin dashboard to this one --> 
+@if (Model.ShowTableEmployee.Any())
+{
+    <!-- Grid de Quadrados das Tables -->
+    <div class="row g-3">
+        @foreach (var table in Model.ShowTableEmployee)
+        {
+            <!-- Quadrado clicável para cada Table -->
+            <div class="col-md-3 col-sm-4 col-6">
+                <div class="table-card card h-100 shadow-sm" 
+                     data-bs-toggle="modal" 
+                     data-bs-target="#tableModal" 
+                     data-table-id="@table.id"
+                     data-table-number="@table.number"
+                     data-table-seats="@table.seats"
+                     data-table-status="@table.status"
+                     style="cursor: pointer; transition: transform 0.2s;">
+                    <div class="card-body text-center">
+                        <h3 class="mb-2">Table #@table.number</h3>
+                        <span class="badge @(Model.GetStatusBadgeClass(table.status))">
+                            @(table.status ?? "Available")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No tables available.
+    </div>
+}
+
+<!-- ============================================ -->
+<!-- POPUP/MODAL - Aqui está o popup da table -->
+<!-- ============================================ -->
+<!-- Quando clicas num quadrado, este modal abre -->
+<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <!-- Header do Modal - Apenas título e botão close -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- ============================================ -->
+            <!-- AQUI PODES ADICIONAR A INFORMAÇÃO DA TABLE -->
+            <!-- ============================================ -->
+            <!-- Exemplo de estrutura que podes adicionar: -->
+            <!--
+            <div class="modal-body">
+                <p>Adiciona aqui a informação da table...</p>
+            </div>
+            -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    }
+    
+    .table-card {
+        border: 2px solid #dee2e6;
+    }
+    
+    .table-card:hover {
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    // ============================================
+    // FUNÇÃO PARA ABRIR O POPUP
+    // ============================================
+    // Quando clicas num quadrado, esta função é chamada
+    document.addEventListener('DOMContentLoaded', function() {
+        // Quando o modal abre
+        const tableModal = document.getElementById('tableModal');
+        tableModal.addEventListener('show.bs.modal', function (event) {
+            // Botão que foi clicado (o quadrado)
+            const button = event.relatedTarget;
+            
+            // Obter os dados da table do quadrado
+            const tableId = button.getAttribute('data-table-id');
+            const tableNumber = button.getAttribute('data-table-number');
+            const tableSeats = button.getAttribute('data-table-seats');
+            const tableStatus = button.getAttribute('data-table-status');
+            
+            // ============================================
+            // AQUI PODES FAZER MAIS COISAS
+            // ============================================
+            // Por exemplo:
+            // - Fazer uma chamada AJAX para buscar mais detalhes da table
+            // - Carregar lista de items/produtos
+            // - Carregar histórico de pedidos
+            // - Preencher informação no modal
+            // - etc.
+            
+            // Exemplo de chamada AJAX (podes descomentar e adaptar):
+            /*
+            fetch('/api/table/' + tableId + '/details')
+                .then(response => response.json())
+                .then(data => {
+                    // Preencher informação no modal
+                    console.log(data);
+                });
+            */
+        });
+    });
+</script>
+
