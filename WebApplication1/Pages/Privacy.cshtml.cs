@@ -27,7 +27,7 @@ namespace DTMS.Pages
             return tables2.connString;
         }
 
-        // Função para obter a classe CSS do badge baseado no status
+        // Function to get  the badge (color bg) of the status
         public string GetStatusBadgeClass(string status)
         {
             var s = (status ?? "Available").ToLowerInvariant();
