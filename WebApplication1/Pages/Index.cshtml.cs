@@ -57,7 +57,8 @@ namespace DTMS.Pages
             else if (s == "reserved") { bg = "#fff3cd"; fg = "#856404"; }
             else if (s == "outofservice") { bg = "#e2e3e5"; fg = "#383d41"; }
             
-            return $"display:inline-block; margin-left:8px; padding:2px 8px; border-radius:12px; font-size:12px; background:{bg}; color:{fg};";
+            return 
+                "display:inline-block; margin-left:8px; padding:2px 8px; border-radius:12px; font-size:12px; background:{bg}; color:{fg};";
         }
 
         public async Task OnGet()
