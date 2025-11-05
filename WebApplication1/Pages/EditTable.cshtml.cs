@@ -1,5 +1,5 @@
-using DTMS.Data;
-using DTMS.Data.Models;
+using DataAcessLayer.Models;
+using BusinessLogicLayer.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -7,13 +7,19 @@ namespace DTMS.Pages
 {
     public class EditTableModel : PageModel
     {
+        private readonly ITableService _tableService;
+
+        public EditTableModel(ITableService tableService)
+        {
+            _tableService = tableService;
+        }
+
         [BindProperty]
         public table Table { get; set; } = new();
 
         public IActionResult OnGet(int id)
         {
-            var tc = new tableconn();
-            var existing = tc.GetTable(id);
+            var existing = _tableService.GetTableById(id);
             if (existing == null)
                 return RedirectToPage("/Index");
 
@@ -32,8 +38,7 @@ namespace DTMS.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            var tc = new tableconn();
-            tc.UpdateTable(Table);
+            _tableService.UpdateTable(Table);
 
             return RedirectToPage("/Index");
         }

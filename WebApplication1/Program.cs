@@ -1,14 +1,16 @@
-using DTMS.Data.Models;
-using Microsoft.EntityFrameworkCore;
-using DTMS.Data.Models;
+using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cs = builder.Configuration.GetConnectionString("DefaultConnection");
-//builder.Services.AddDbContext<AppDbContext>(o =>
-//    o.UseMySql(cs, ServerVersion.AutoDetect(cs)));
-
+// Add services to the container.
 builder.Services.AddRazorPages();
+
+// DI Registrations
+builder.Services.AddScoped<ITableService, TableService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

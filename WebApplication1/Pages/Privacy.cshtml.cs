@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using DTMS.Data;
-using DTMS.Data.Models;
+using DataAcessLayer;
+using DataAcessLayer.Models;
 
 namespace DTMS.Pages
 {

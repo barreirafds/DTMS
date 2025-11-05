@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace DTMS.Data.Models;
+namespace DataAcessLayer.Models;
 
-public partial class product
+public class product
 {
     public int id { get; set; }
 

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
-namespace DTMS.Data.Models;
+namespace DataAcessLayer.Models;
 
-public partial class user
+public class user
 {
     public int? id { get; set; }
 
@@ -13,3 +13,4 @@ public partial class user
 
     public string? role { get; set; }
 }
+

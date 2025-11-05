@@ -1,11 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using BusinessLogicLayer.Abstractions;
 
 namespace DTMS.Pages
 {
     public class RegisterModel : PageModel
     {
+        private readonly IAuthService _authService;
+
+        public RegisterModel(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
         [BindProperty]
         [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = string.Empty;
@@ -28,18 +36,21 @@ namespace DTMS.Pages
 
         public IActionResult OnPost()
         {
-          
-            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmPassword) || string.IsNullOrWhiteSpace(Role))
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "All fields are required.");
                 return Page();
             }
-            Username = string.Empty;
-            Password = string.Empty;
-            ConfirmPassword = string.Empty;
-            Role = string.Empty;
 
-            return Page();
+            if (_authService.RegisterUser(Username, Password, ConfirmPassword, Role, out string? errorMessage))
+            {
+                // Registro bem-sucedido
+                return RedirectToPage("/Login");
+            }
+            else
+            {
+                ModelState.AddModelError("", errorMessage ?? "Registration failed.");
+                return Page();
+            }
         }
     }
 }

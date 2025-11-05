@@ -1,23 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging.EventLog;
-using System.Diagnostics.Eventing.Reader;
-using DTMS.Data.Models;
+using DataAcessLayer.Models;
+using BusinessLogicLayer.Abstractions;
 
 namespace DTMS.Pages
 {
     public class LoginModel : PageModel
     {
-        [BindProperty]
+        private readonly IAuthService _authService;
 
-        public user User { get; set; }
+        public LoginModel(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
+        [BindProperty]
+        public user User { get; set; } = new();
+
         public void OnGet()
         {
         }
 
         public ActionResult OnPost()
         {
-            if (User.user1 == "user" && User.password=="password")
+            if (User.user1 == null || User.password == null)
+            {
+                ViewData["Message"] = "Invalid Credentials";
+                return Page();
+            }
+
+            if (_authService.ValidateCredentials(User.user1, User.password))
             {
                 return new RedirectToPageResult("Index");
             }
