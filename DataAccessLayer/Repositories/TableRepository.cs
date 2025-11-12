@@ -1,11 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using DataAcessLayer.Models;
+using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.Models;
 using MySql.Data.MySqlClient;
 
-namespace DataAcessLayer;
+namespace DataAcessLayer.Repositories;
 
-public class tableconn
+public class TableRepository : ITableRepository
 {
     public string connString = "server=localhost;port=3306;database=dtms;user=root;password=root;";
 
@@ -93,3 +94,4 @@ public class tableconn
         cmd.ExecuteNonQuery();
     }
 }
+
