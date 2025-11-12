@@ -1,13 +1,13 @@
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
 
 namespace BusinessLogicLayer.Abstractions;
 
 public interface IProductService
 {
-    List<product> GetAllProducts();
-    product? GetProductById(int id);
-    void CreateProduct(string name, string? description, decimal price, string category);
-    void UpdateProduct(product product);
+    List<ProductDTO> GetAllProducts();
+    ProductDTO? GetProductById(int id);
+    ValidationResult CreateProduct(CreateProductDTO createProductDto);
+    void UpdateProduct(ProductDTO productDto);
     void DeleteProduct(int id);
 }
 

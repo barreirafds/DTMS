@@ -1,13 +1,13 @@
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
 
 namespace BusinessLogicLayer.Abstractions;
 
 public interface IUserService
 {
-    List<user> GetAllUsers();
-    user? GetUserById(int id);
-    void CreateUser(string username, string password, string role);
-    void UpdateUser(user user);
+    List<UserDTO> GetAllUsers();
+    UserDTO? GetUserById(int id);
+    ValidationResult CreateUser(CreateUserDTO createUserDto);
+    void UpdateUser(UserDTO userDto);
     void DeleteUser(int id);
 }
 

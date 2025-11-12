@@ -1,13 +1,13 @@
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
 
 namespace BusinessLogicLayer.Abstractions;
 
 public interface ITableService
 {
-    List<table> GetAllTables();
-    table? GetTableById(int id);
-    void CreateTable(int number, int seats, string status);
-    void UpdateTable(table table);
+    List<TableDTO> GetAllTables();
+    TableDTO? GetTableById(int id);
+    ValidationResult CreateTable(CreateTableDTO createTableDto);
+    ValidationResult UpdateTable(UpdateTableDTO updateTableDto);
     void DeleteTable(int id);
     string GetStatusBadgeStyle(string status);
 }

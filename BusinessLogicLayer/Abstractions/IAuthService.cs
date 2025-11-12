@@ -1,10 +1,10 @@
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
 
 namespace BusinessLogicLayer.Abstractions;
 
 public interface IAuthService
 {
-    bool ValidateCredentials(string username, string password);
-    bool RegisterUser(string username, string password, string confirmPassword, string role, out string? errorMessage);
+    ValidationResult ValidateCredentials(LoginDTO loginDto);
+    ValidationResult RegisterUser(RegisterDTO registerDto);
 }
 

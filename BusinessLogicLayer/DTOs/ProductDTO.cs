@@ -10,21 +10,21 @@ namespace BusinessLogicLayer.DTOs
     {
         public int id { get; set; }
 
-        public string name { get; set; }
+        public string name { get; set; } = string.Empty;
 
         public string? description { get; set; }
 
         public decimal price { get; set; }
 
-        public string category { get; set; }
+        public string category { get; set; } = string.Empty;
 
     }
 
     public class CreateProductDTO
     {
-        public string name { get; set; }
+        public string name { get; set; } = string.Empty;
         public string? description { get; set; } = "";
         public decimal price { get; set; }
-        public string category { get; set; }
+        public string category { get; set; } = string.Empty;
     }
 }

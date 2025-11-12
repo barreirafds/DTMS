@@ -1,41 +1,91 @@
 using BusinessLogicLayer.Abstractions;
-using DataAcessLayer;
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
+using BusinessLogicLayer.Models;
 
 namespace BusinessLogicLayer.Services;
 
 public class UserService : IUserService
 {
-    private readonly userconn _userConn;
+    private readonly IUserRepository _userRepository;
 
-    public UserService()
+    public UserService(IUserRepository userRepository)
     {
-        _userConn = new userconn();
+        _userRepository = userRepository;
     }
 
-    public List<user> GetAllUsers()
+    public List<UserDTO> GetAllUsers()
     {
-        return _userConn.GetUsers();
+        var users = _userRepository.GetUsers();
+        return users.Select(u => new UserDTO
+        {
+            Id = u.id,
+            Username = u.user1 ?? string.Empty,
+            Password = u.password,
+            Role = u.role ?? string.Empty
+        }).ToList();
     }
 
-    public user? GetUserById(int id)
+    public UserDTO? GetUserById(int id)
     {
-        return _userConn.GetUser(id);
+        var user = _userRepository.GetUser(id);
+        if (user == null) return null;
+
+        return new UserDTO
+        {
+            Id = user.id,
+            Username = user.user1 ?? string.Empty,
+            Password = user.password,
+            Role = user.role ?? string.Empty
+        };
     }
 
-    public void CreateUser(string username, string password, string role)
+    public ValidationResult CreateUser(CreateUserDTO createUserDto)
     {
-        _userConn.CreateUser(username, password, role);
+        // Validação: todos os campos são obrigatórios
+        if (string.IsNullOrWhiteSpace(createUserDto.Username) ||
+            string.IsNullOrWhiteSpace(createUserDto.Password) ||
+            string.IsNullOrWhiteSpace(createUserDto.Role))
+        {
+            return ValidationResult.Failure("All fields are required.");
+        }
+
+        // Verificar se o utilizador já existe
+        var users = _userRepository.GetUsers();
+        if (users.Any(u => u.user1 == createUserDto.Username))
+        {
+            return ValidationResult.Failure("Username already exists.", nameof(createUserDto.Username));
+        }
+
+        _userRepository.CreateUser(createUserDto.Username, createUserDto.Password, createUserDto.Role);
+        return ValidationResult.Success();
     }
 
-    public void UpdateUser(user user)
+    public void UpdateUser(UserDTO userDto)
     {
-        _userConn.UpdateUser(user);
+        if (userDto.Id == null || userDto.Id == 0)
+        {
+            return;
+        }
+
+        var user = new user
+        {
+            id = userDto.Id,
+            user1 = userDto.Username,
+            password = userDto.Password,
+            role = userDto.Role
+        };
+
+        _userRepository.UpdateUser(user);
     }
 
     public void DeleteUser(int id)
     {
-        _userConn.DeleteUser(id);
+        if (id <= 0)
+        {
+            return;
+        }
+
+        _userRepository.DeleteUser(id);
     }
 }
 

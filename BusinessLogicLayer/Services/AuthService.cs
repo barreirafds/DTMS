@@ -1,60 +1,70 @@
 using BusinessLogicLayer.Abstractions;
-using DataAcessLayer;
-using DataAcessLayer.Models;
+using BusinessLogicLayer.DTOs;
+using BusinessLogicLayer.Models;
 
 namespace BusinessLogicLayer.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly userconn _userConn;
+    private readonly IUserRepository _userRepository;
 
-    public AuthService()
+    public AuthService(IUserRepository userRepository)
     {
-        _userConn = new userconn();
+        _userRepository = userRepository;
     }
 
-    public bool ValidateCredentials(string username, string password)
+    public ValidationResult ValidateCredentials(LoginDTO loginDto)
     {
-        // Por enquanto, validação simples hardcoded
-        // TODO: Implementar validação real com banco de dados
-        if (username == "user" && password == "password")
+        // Validação: username e password são obrigatórios
+        if (string.IsNullOrWhiteSpace(loginDto.Username) || string.IsNullOrWhiteSpace(loginDto.Password))
         {
-            return true;
+            return ValidationResult.Failure("Invalid Credentials");
+        }
+
+        // Validação hardcoded temporária (para desenvolvimento)
+        if (loginDto.Username == "user" && loginDto.Password == "password")
+        {
+            return ValidationResult.Success();
         }
 
         // Verificar no banco de dados
-        var users = _userConn.GetUsers();
-        var user = users.FirstOrDefault(u => u.user1 == username && u.password == password);
-        return user != null;
+        var users = _userRepository.GetUsers();
+        var user = users.FirstOrDefault(u => u.user1 == loginDto.Username && u.password == loginDto.Password);
+        
+        if (user != null)
+        {
+            return ValidationResult.Success();
+        }
+
+        return ValidationResult.Failure("Invalid Credentials");
     }
 
-    public bool RegisterUser(string username, string password, string confirmPassword, string role, out string? errorMessage)
+    public ValidationResult RegisterUser(RegisterDTO registerDto)
     {
-        errorMessage = null;
-
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || 
-            string.IsNullOrWhiteSpace(confirmPassword) || string.IsNullOrWhiteSpace(role))
+        // Validação: todos os campos são obrigatórios
+        if (string.IsNullOrWhiteSpace(registerDto.Username) ||
+            string.IsNullOrWhiteSpace(registerDto.Password) ||
+            string.IsNullOrWhiteSpace(registerDto.ConfirmPassword) ||
+            string.IsNullOrWhiteSpace(registerDto.Role))
         {
-            errorMessage = "All fields are required.";
-            return false;
+            return ValidationResult.Failure("All fields are required.");
         }
 
-        if (password != confirmPassword)
+        // Validação: passwords devem coincidir
+        if (registerDto.Password != registerDto.ConfirmPassword)
         {
-            errorMessage = "Passwords do not match.";
-            return false;
+            return ValidationResult.Failure("Passwords do not match.", nameof(registerDto.ConfirmPassword));
         }
 
-        // Verificar se o usuário já existe
-        var users = _userConn.GetUsers();
-        if (users.Any(u => u.user1 == username))
+        // Verificar se o utilizador já existe
+        var users = _userRepository.GetUsers();
+        if (users.Any(u => u.user1 == registerDto.Username))
         {
-            errorMessage = "Username already exists.";
-            return false;
+            return ValidationResult.Failure("Username already exists.", nameof(registerDto.Username));
         }
 
-        _userConn.CreateUser(username, password, role);
-        return true;
+        _userRepository.CreateUser(registerDto.Username, registerDto.Password, registerDto.Role);
+        return ValidationResult.Success();
     }
 }
 
