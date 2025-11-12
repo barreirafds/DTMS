@@ -8,11 +8,11 @@
 
 @if (Model.ShowTableEmployee.Any())
 {
-    <!-- Grid de Quadrados das Tables -->
+    <!-- Grid of the square -->
     <div class="row g-3">
         @foreach (var table in Model.ShowTableEmployee)
         {
-            <!-- Quadrado clicável para cada Table -->
+            <!-- square box -->
             <div class="col-md-3 col-sm-4 col-6">
                 <div class="table-card card h-100 shadow-sm" 
                      data-bs-toggle="modal" 
@@ -40,10 +40,7 @@ else
     </div>
 }
 
-<!-- ============================================ -->
-<!-- POPUP/MODAL - Aqui está o popup da table -->
-<!-- ============================================ -->
-<!-- Quando clicas num quadrado, este modal abre -->
+
 <div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -52,16 +49,7 @@ else
                 <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            <!-- ============================================ -->
-            <!-- AQUI PODES ADICIONAR A INFORMAÇÃO DA TABLE -->
-            <!-- ============================================ -->
-            <!-- Exemplo de estrutura que podes adicionar: -->
-            <!--
-            <div class="modal-body">
-                <p>Adiciona aqui a informação da table...</p>
-            </div>
-            -->
+  <!-- here -->
         </div>
     </div>
 </div>
@@ -82,42 +70,17 @@ else
 </style>
 
 <script>
-    // ============================================
-    // FUNÇÃO PARA ABRIR O POPUP
-    // ============================================
-    // Quando clicas num quadrado, esta função é chamada
     document.addEventListener('DOMContentLoaded', function() {
-        // Quando o modal abre
+        // when the model opens
         const tableModal = document.getElementById('tableModal');
         tableModal.addEventListener('show.bs.modal', function (event) {
-            // Botão que foi clicado (o quadrado)
+
             const button = event.relatedTarget;
             
-            // Obter os dados da table do quadrado
             const tableId = button.getAttribute('data-table-id');
             const tableNumber = button.getAttribute('data-table-number');
             const tableSeats = button.getAttribute('data-table-seats');
             const tableStatus = button.getAttribute('data-table-status');
-            
-            // ============================================
-            // AQUI PODES FAZER MAIS COISAS
-            // ============================================
-            // Por exemplo:
-            // - Fazer uma chamada AJAX para buscar mais detalhes da table
-            // - Carregar lista de items/produtos
-            // - Carregar histórico de pedidos
-            // - Preencher informação no modal
-            // - etc.
-            
-            // Exemplo de chamada AJAX (podes descomentar e adaptar):
-            /*
-            fetch('/api/table/' + tableId + '/details')
-                .then(response => response.json())
-                .then(data => {
-                    // Preencher informação no modal
-                    console.log(data);
-                });
-            */
         });
     });
 </script>
