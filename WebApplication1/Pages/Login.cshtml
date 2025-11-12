@@ -19,19 +19,19 @@
             @Html.AntiForgeryToken()
             
             <div class="mb-3">
-                <label for="User_user1" class="form-label">Username</label>
+                <label for="Username" class="form-label">Username</label>
                 <input type="text" class="form-control" 
-                       id="User_user1" name="User.user1" asp-for="User.user1" 
+                       id="Username" name="Username" asp-for="Username" 
                        required autofocus>
-                <span asp-validation-for="User.user1" class="text-danger"></span>
+                <span asp-validation-for="Username" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label for="User_password" class="form-label">Password</label>
+                <label for="Password" class="form-label">Password</label>
                 <input type="password" class="form-control" 
-                       id="User_password" name="User.password" asp-for="User.password" 
+                       id="Password" name="Password" asp-for="Password" 
                        required>
-                <span asp-validation-for="User.password" class="text-danger"></span>
+                <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
             <div class="mb-3 form-check">

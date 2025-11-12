@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using DataAcessLayer.Models;
 using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.DTOs;
 
 namespace DTMS.Pages
 {
@@ -15,7 +15,10 @@ namespace DTMS.Pages
         }
 
         [BindProperty]
-        public user User { get; set; } = new();
+        public string Username { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string Password { get; set; } = string.Empty;
 
         public void OnGet()
         {
@@ -23,19 +26,21 @@ namespace DTMS.Pages
 
         public ActionResult OnPost()
         {
-            if (User.user1 == null || User.password == null)
+            var loginDto = new LoginDTO
             {
-                ViewData["Message"] = "Invalid Credentials";
-                return Page();
-            }
+                Username = Username,
+                Password = Password
+            };
 
-            if (_authService.ValidateCredentials(User.user1, User.password))
+            var result = _authService.ValidateCredentials(loginDto);
+            
+            if (result.IsValid)
             {
                 return new RedirectToPageResult("Index");
             }
             else
             {
-                ViewData["Message"] = "Invalid Credentials";
+                ViewData["Message"] = result.ErrorMessage ?? "Invalid Credentials";
                 return Page();
             }
         }

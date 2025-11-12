@@ -20,8 +20,7 @@
                      data-table-id="@table.id"
                      data-table-number="@table.number"
                      data-table-seats="@table.seats"
-                     data-table-status="@table.status"
-                     style="cursor: pointer; transition: transform 0.2s;">
+                     data-table-status="@table.status">
                     <div class="card-body text-center">
                         <h3 class="mb-2">Table #@table.number</h3>
                         <span class="badge @(Model.GetStatusBadgeClass(table.status))">
@@ -53,21 +52,6 @@ else
         </div>
     </div>
 </div>
-
-<style>
-    .table-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-    }
-    
-    .table-card {
-        border: 2px solid #dee2e6;
-    }
-    
-    .table-card:hover {
-        border-color: #0d6efd;
-    }
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

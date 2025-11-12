@@ -1,9 +1,8 @@
-using DataAcessLayer.Models;
 using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
-
 
 namespace DTMS.Pages
 {
@@ -29,7 +28,7 @@ namespace DTMS.Pages
         [BindProperty]
         public string TableStatus { get; set; } = "Available";
 
-        public List<table> TablesList { get; private set; } = new();
+        public List<TableDTO> TablesList { get; private set; } = new();
 
         // Users Properties
         [BindProperty]
@@ -41,7 +40,7 @@ namespace DTMS.Pages
         [BindProperty]
         public string UserRole { get; set; } = string.Empty;
 
-        public List<user> UsersList { get; private set; } = new();
+        public List<UserDTO> UsersList { get; private set; } = new();
 
         // Products Properties
         [BindProperty]
@@ -56,34 +55,37 @@ namespace DTMS.Pages
         [BindProperty]
         public string ProductCategory { get; set; } = string.Empty;
 
-        public List<product> ProductsList { get; private set; } = new();
+        public List<ProductDTO> ProductsList { get; private set; } = new();
 
-        public string GetStatusBadgeStyle(string status)
+        public string GetStatusBadgeStyle(string? status)
         {
-            return _tableService.GetStatusBadgeStyle(status);
+            return _tableService.GetStatusBadgeStyle(status ?? string.Empty);
         }
 
-        public async Task OnGet()
+        public void OnGet()
         {
             TablesList = _tableService.GetAllTables();
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
         }
 
-        public async Task<IActionResult> OnPost()
+        public IActionResult OnPost()
         {
-            if (!int.TryParse(TableNumber, out var number))
+            var createTableDto = new CreateTableDTO
             {
-                ModelState.AddModelError(nameof(TableNumber), "Table Number needs to be a number.");
-            }
+                TableNumber = TableNumber,
+                Seats = TableSeats,
+                Status = TableStatus
+            };
 
-            if (!ModelState.IsValid)
+            var result = _tableService.CreateTable(createTableDto);
+            
+            if (!result.IsValid)
             {
-                TablesList = _tableService.GetAllTables();
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet();
                 return Page();
             }
-
-            _tableService.CreateTable(number, TableSeats, TableStatus);
 
             return RedirectToPage();
         }
@@ -95,18 +97,23 @@ namespace DTMS.Pages
         }
 
         // Users CRUD
-        public async Task<IActionResult> OnPostCreateUser()
+        public IActionResult OnPostCreateUser()
         {
-            if (string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(UserRole))
+            var createUserDto = new CreateUserDTO
             {
-                ModelState.AddModelError("", "All fields are required.");
-                TablesList = _tableService.GetAllTables();
-                UsersList = _userService.GetAllUsers();
-                ProductsList = _productService.GetAllProducts();
+                Username = UserName,
+                Password = Password,
+                Role = UserRole
+            };
+
+            var result = _userService.CreateUser(createUserDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet();
                 return Page();
             }
-
-            _userService.CreateUser(UserName, Password, UserRole);
 
             return RedirectToPage();
         }
@@ -123,27 +130,24 @@ namespace DTMS.Pages
         }
 
         // Products CRUD 
-        public async Task<IActionResult> OnPostCreateProduct()
+        public IActionResult OnPostCreateProduct()
         {
-            if (string.IsNullOrWhiteSpace(ProductName) || string.IsNullOrWhiteSpace(ProductCategory))
+            var createProductDto = new CreateProductDTO
             {
-                ModelState.AddModelError("", "Product name and category are required.");
-                TablesList = _tableService.GetAllTables();
-                UsersList = _userService.GetAllUsers();
-                ProductsList = _productService.GetAllProducts();
+                name = ProductName,
+                description = ProductDescription,
+                price = ProductPrice,
+                category = ProductCategory
+            };
+
+            var result = _productService.CreateProduct(createProductDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet();
                 return Page();
             }
-
-            if (ProductPrice <= 0)
-            {
-                ModelState.AddModelError("", "Product price must be greater than 0.");
-                TablesList = _tableService.GetAllTables();
-                UsersList = _userService.GetAllUsers();
-                ProductsList = _productService.GetAllProducts();
-                return Page();
-            }
-
-            _productService.CreateProduct(ProductName, ProductDescription, ProductPrice, ProductCategory);
 
             return RedirectToPage();
         }
@@ -153,6 +157,5 @@ namespace DTMS.Pages
             _productService.DeleteProduct(id);
             return RedirectToPage();
         }
-
     }
 }

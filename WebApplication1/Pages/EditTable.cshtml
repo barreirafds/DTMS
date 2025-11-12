@@ -8,35 +8,35 @@
 
 <form method="post">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Table.id" />
+    <input type="hidden" asp-for="Id" />
 
-    <div style="margin-bottom:10px;">
-        <label asp-for="Table.number"></label><br />
-        <input asp-for="Table.number" />
-        <span asp-validation-for="Table.number"></span>
+    <div class="edit-table-form-group">
+        <label asp-for="Number"></label><br />
+        <input asp-for="Number" />
+        <span asp-validation-for="Number"></span>
     </div>
 
-    <div style="margin-bottom:10px;">
-        <label asp-for="Table.seats"></label><br />
-        <input asp-for="Table.seats" type="number" />
-        <span asp-validation-for="Table.seats"></span>
+    <div class="edit-table-form-group">
+        <label asp-for="Seats"></label><br />
+        <input asp-for="Seats" type="number" />
+        <span asp-validation-for="Seats"></span>
     </div>
 
-    <div style="margin-bottom:10px;">
-        <label asp-for="Table.status"></label><br />
-        <select asp-for="Table.status">
+    <div class="edit-table-form-group">
+        <label asp-for="Status"></label><br />
+        <select asp-for="Status">
             <option value="Available">Available</option>
             <option value="Occupied">Occupied</option>
             <option value="Reserved">Reserved</option>
             <option value="OutOfService">OutOfService</option>
         </select>
-        <span asp-validation-for="Table.status"></span>
+        <span asp-validation-for="Status"></span>
     </div>
 
     <div asp-validation-summary="All"></div>
 
-    <button type="submit" style="background:#28a745;color:white;padding:8px 16px;border:none;border-radius:6px;">Save</button>
-    <a asp-page="/Index" style="margin-left:10px;">Cancel</a>
+    <button type="submit" class="edit-table-save-btn">Save</button>
+    <a asp-page="/Index" class="edit-table-cancel-link">Cancel</a>
 </form>
 
 @section Scripts {

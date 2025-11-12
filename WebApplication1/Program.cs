@@ -1,12 +1,18 @@
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Services;
+using DataAcessLayer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// DI Registrations
+// Repository Registrations (Data Access Layer)
+builder.Services.AddScoped<ITableRepository, TableRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+// Service Registrations (Business Logic Layer)
 builder.Services.AddScoped<ITableService, TableService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();

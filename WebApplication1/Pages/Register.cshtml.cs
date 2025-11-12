@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.DTOs;
 
 namespace DTMS.Pages
 {
@@ -41,14 +42,23 @@ namespace DTMS.Pages
                 return Page();
             }
 
-            if (_authService.RegisterUser(Username, Password, ConfirmPassword, Role, out string? errorMessage))
+            var registerDto = new RegisterDTO
             {
-                // Registro bem-sucedido
+                Username = Username,
+                Password = Password,
+                ConfirmPassword = ConfirmPassword,
+                Role = Role
+            };
+
+            var result = _authService.RegisterUser(registerDto);
+            
+            if (result.IsValid)
+            {
                 return RedirectToPage("/Login");
             }
             else
             {
-                ModelState.AddModelError("", errorMessage ?? "Registration failed.");
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "Registration failed.");
                 return Page();
             }
         }

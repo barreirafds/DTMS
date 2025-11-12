@@ -1,5 +1,5 @@
-using DataAcessLayer.Models;
 using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -15,7 +15,16 @@ namespace DTMS.Pages
         }
 
         [BindProperty]
-        public table Table { get; set; } = new();
+        public int Id { get; set; }
+
+        [BindProperty]
+        public int Number { get; set; }
+
+        [BindProperty]
+        public int Seats { get; set; }
+
+        [BindProperty]
+        public string Status { get; set; } = string.Empty;
 
         public IActionResult OnGet(int id)
         {
@@ -23,22 +32,31 @@ namespace DTMS.Pages
             if (existing == null)
                 return RedirectToPage("/Index");
 
-            Table = existing;
+            Id = existing.Id;
+            Number = existing.Number;
+            Seats = existing.Seats;
+            Status = existing.Status;
+            
             return Page();
         }
 
         public IActionResult OnPost()
         {
-            if (Table == null)
-                return RedirectToPage("/Index");
+            var updateTableDto = new UpdateTableDTO
+            {
+                Id = Id,
+                Number = Number,
+                Seats = Seats,
+                Status = Status
+            };
 
-            if (Table.number <= 0)
-                ModelState.AddModelError("Table.number", "The number of the table needs to be positive.");
-
-            if (!ModelState.IsValid)
+            var result = _tableService.UpdateTable(updateTableDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
                 return Page();
-
-            _tableService.UpdateTable(Table);
+            }
 
             return RedirectToPage("/Index");
         }

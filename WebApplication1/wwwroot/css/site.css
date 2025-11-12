@@ -1,5 +1,11 @@
+/* ============================================
+   Global Styles
+   ============================================ */
+
 html {
   font-size: 14px;
+  position: relative;
+  min-height: 100%;
 }
 
 @media (min-width: 768px) {
@@ -8,15 +14,138 @@ html {
   }
 }
 
+body {
+  margin-bottom: 60px;
+}
+
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* ============================================
+   Index Page - Admin Dashboard
+   Styles for the main admin dashboard with tabs for Tables, Users, and Products
+   ============================================ */
+
+.admin-dashboard {
+    padding: 20px 0;
 }
 
-body {
-  margin-bottom: 60px;
+/* Navigation tabs styling */
+.nav-tabs .nav-link {
+    color: #495057;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 20px;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    border-bottom-color: #dee2e6;
+    color: #007bff;
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background-color: transparent;
+}
+
+/* Card styling for forms and lists */
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.card-header {
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 600;
+}
+
+/* Table header styling */
+.table th {
+    font-weight: 600;
+    border-top: none;
+    color: #495057;
+}
+
+/* Badge styling */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Small button styling */
+.btn-sm {
+    padding: 4px 8px;
+}
+
+/* Form label styling */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+/* Form control focus styling */
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 6px;
+}
+
+/* Bootstrap Icons spacing */
+.bi {
+    margin-right: 5px;
+}
+
+/* ============================================
+   EditTable Page
+   Styles for the table editing form
+   ============================================ */
+
+.edit-table-form-group {
+    margin-bottom: 10px;
+}
+
+.edit-table-save-btn {
+    background: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+}
+
+.edit-table-cancel-link {
+    margin-left: 10px;
+}
+
+/* ============================================
+   Privacy/Dashboard Page
+   Styles for the employee dashboard with table cards
+   ============================================ */
+
+.table-card {
+    border: 2px solid #dee2e6;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.table-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    border-color: #0d6efd;
+}
+
+/* ============================================
+   Common Utility Classes
+   ============================================ */
+
+.inline-form {
+    display: inline;
 }
