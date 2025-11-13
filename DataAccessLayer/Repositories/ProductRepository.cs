@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
-using MySql.Data.MySqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace DataAcessLayer.Repositories;
 
 public class ProductRepository : IProductRepository
 {
-    public string connString = "server=localhost;port=3306;database=dtms;user=root;password=root;";
+    public string connString = "Server=mssqlstud.fhict.local;Database=dbi570286_dbdtms1;User Id=dbi570286_dbdtms1;Password=root1234;TrustServerCertificate=True;";
 
     public List<product> GetProducts()
     {
         var products = new List<product>();
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "SELECT `id`, `name`, `description`, `price`, `category`, `created_at` FROM `product` ORDER BY `id`;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "SELECT [id], [name], [description], [price], [category], [created_at] FROM [product] ORDER BY [id];";
+        using var cmd = new SqlCommand(query, conn);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -36,11 +36,11 @@ public class ProductRepository : IProductRepository
 
     public product? GetProduct(int id)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "SELECT `id`, `name`, `description`, `price`, `category`, `created_at` FROM `product` WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "SELECT [id], [name], [description], [price], [category], [created_at] FROM [product] WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -61,11 +61,11 @@ public class ProductRepository : IProductRepository
 
     public void CreateProduct(string name, string? description, decimal price, string category)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "INSERT INTO `product` (`name`, `description`, `price`, `category`) VALUES (@name, @description, @price, @category);";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "INSERT INTO [product] ([name], [description], [price], [category]) VALUES (@name, @description, @price, @category);";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@name", name);
         cmd.Parameters.AddWithValue("@description", description ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@price", price);
@@ -75,11 +75,11 @@ public class ProductRepository : IProductRepository
 
     public void UpdateProduct(product p)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "UPDATE `product` SET `name`=@name, `description`=@description, `price`=@price, `category`=@category WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "UPDATE [product] SET [name]=@name, [description]=@description, [price]=@price, [category]=@category WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@name", p.name);
         cmd.Parameters.AddWithValue("@description", p.description ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@price", p.price);
@@ -90,11 +90,11 @@ public class ProductRepository : IProductRepository
 
     public void DeleteProduct(int id)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "DELETE FROM `product` WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "DELETE FROM [product] WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();
     }

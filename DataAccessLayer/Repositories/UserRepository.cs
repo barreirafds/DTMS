@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
-using MySql.Data.MySqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace DataAcessLayer.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    public string connString = "server=localhost;port=3306;database=dtms;user=root;password=root;";
+    public string connString = "Server=mssqlstud.fhict.local;Database=dbi570286_dbdtms1;User Id=dbi570286_dbdtms1;Password=root1234;TrustServerCertificate=True;";
 
     public List<user> GetUsers()
     {
         var users = new List<user>();
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "SELECT `id`, `user`, `password`, `role` FROM `user` ORDER BY `id`;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "SELECT [id], [user], [password], [role] FROM [user] ORDER BY [id];";
+        using var cmd = new SqlCommand(query, conn);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -34,11 +34,11 @@ public class UserRepository : IUserRepository
 
     public user? GetUser(int id)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "SELECT `id`, `user`, `password`, `role` FROM `user` WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "SELECT [id], [user], [password], [role] FROM [user] WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -57,11 +57,11 @@ public class UserRepository : IUserRepository
 
     public void CreateUser(string username, string password, string role)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "INSERT INTO `user` (`user`, `password`, `role`) VALUES (@username, @password, @role);";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "INSERT INTO [user] ([user], [password], [role]) VALUES (@username, @password, @role);";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@username", username);
         cmd.Parameters.AddWithValue("@password", password);
         cmd.Parameters.AddWithValue("@role", role);
@@ -75,11 +75,11 @@ public class UserRepository : IUserRepository
             return;
         }
 
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "UPDATE `user` SET `user`=@username, `password`=@password, `role`=@role WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "UPDATE [user] SET [user]=@username, [password]=@password, [role]=@role WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@username", u.user1 ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@password", u.password ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@role", u.role ?? (object)DBNull.Value);
@@ -89,11 +89,11 @@ public class UserRepository : IUserRepository
 
     public void DeleteUser(int id)
     {
-        using var conn = new MySqlConnection(connString);
+        using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "DELETE FROM `user` WHERE `id`=@id;";
-        using var cmd = new MySqlCommand(query, conn);
+        const string query = "DELETE FROM [user] WHERE `id`=@id;";
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();
     }
