@@ -3,6 +3,13 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.DTOs;
 
+// AUTHENTICATION USING
+
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+
 namespace DTMS.Pages
 {
     public class LoginModel : PageModel
@@ -24,7 +31,7 @@ namespace DTMS.Pages
         {
         }
 
-        public ActionResult OnPost()
+        public async Task<IActionResult> OnPost()
         {
             var loginDto = new LoginDTO
             {
@@ -33,10 +40,22 @@ namespace DTMS.Pages
             };
 
             var result = _authService.ValidateCredentials(loginDto);
-            
+
             if (result.IsValid)
             {
-                return new RedirectToPageResult("Index");
+                // cria identidade do utilizador
+                var claims = new List<Claim>
+                {
+                new Claim(ClaimTypes.Name, Username)
+                };
+
+                var identity = new ClaimsIdentity(claims,CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var principal = new ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,principal);
+
+                return RedirectToPage("Index");
             }
             else
             {
