@@ -340,17 +340,5 @@ WebApplication1/
 - **Serviços:** Todos os serviços retornam `ValidationResult` para operações que podem falhar
 - **Dependency Injection:** Todos os serviços são registados em `Program.cs` e injetados via construtor
 
----
 
-## Tecnologias Utilizadas
-
-- **.NET 8.0** - Framework principal
-- **ASP.NET Core Razor Pages** - Framework web
-- **MySQL** - Base de dados
-- **MySql.Data.MySqlClient** - Driver MySQL para .NET
-
----
-
-**Data de Criação:** 2025-01-12  
-**Última Atualização:** 2025-01-12
 
