@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
+using BusinessLogicLayer.DTOs;
 
 namespace DTMS.Pages
 {
@@ -9,18 +10,22 @@ namespace DTMS.Pages
     {
         private readonly ILogger<PrivacyModel> _logger;
         private readonly ITableRepository _tableRepository;
+        private readonly IProductService _productService;
 
         public List<table> ShowTableEmployee { get; private set; } = new();
+        public List<ProductDTO> Products { get; private set; } = new();
 
-        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository)
+        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService)
         {
             _logger = logger;
             _tableRepository = tableRepository;
+            _productService = productService;
         }
 
         public void OnGet()
         {
             ShowTableEmployee = _tableRepository.GetTables();
+            Products = _productService.GetAllProducts();
         }
 
         public string showtables()

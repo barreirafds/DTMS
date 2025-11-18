@@ -1,0 +1,245 @@
+/* ============================================
+   Table Modal Styles
+   Estilos para o modal de adicionar produtos às mesas
+   ============================================ */
+
+/* Modal Content */
+#tableModal .modal-content {
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+#tableModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem 1.5rem;
+}
+
+#tableModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+#tableModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
+#tableModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+/* Modal Body */
+#tableModal .modal-body {
+    padding: 2rem;
+}
+
+/* Table Info Section */
+.table-info-section {
+    background-color: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.table-info-section h6 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.table-info-section p {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+
+.table-info-section strong {
+    color: #212529;
+}
+
+/* Add Product Section */
+.add-product-section {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.add-product-section h6 {
+    font-weight: 600;
+    color: #495057;
+}
+
+#addProductBtn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#addProductBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+#addProductBtn:active {
+    transform: translateY(0);
+}
+
+/* Products List Section */
+.products-list-section {
+    margin-top: 1rem;
+}
+
+.products-list-section h6 {
+    font-weight: 600;
+    color: #495057;
+}
+
+#productsTable {
+    margin-bottom: 0;
+}
+
+#productsTable thead {
+    background-color: #f8f9fa;
+}
+
+#productsTable thead th {
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+#productsTable tbody tr {
+    transition: background-color 0.2s;
+}
+
+#productsTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+#productsTable tbody td {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+#productsTable tfoot {
+    background-color: #e7f3ff;
+    border-top: 2px solid #0d6efd;
+}
+
+#productsTable tfoot td {
+    padding: 1rem 0.75rem;
+    font-size: 1.1rem;
+}
+
+#totalAmount {
+    color: #0d6efd;
+    font-size: 1.25rem;
+}
+
+/* Remove Button */
+.remove-product-btn {
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.remove-product-btn:hover {
+    transform: scale(1.1);
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+/* Empty Row */
+#emptyRow {
+    padding: 2rem;
+}
+
+#emptyRow td {
+    padding: 2rem !important;
+    font-style: italic;
+}
+
+/* Form Controls */
+#productSelect:focus,
+#productQuantity:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+}
+
+/* Modal Footer */
+#tableModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+#saveOrderBtn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#saveOrderBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+#saveOrderBtn:active {
+    transform: translateY(0);
+}
+
+/* Temporary Alert */
+.temp-alert {
+    margin-bottom: 1rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Badge Styles */
+.badge {
+    padding: 0.4em 0.8em;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #tableModal .modal-body {
+        padding: 1.5rem;
+    }
+
+    .table-info-section,
+    .add-product-section {
+        padding: 1rem;
+    }
+
+    #productsTable {
+        font-size: 0.9rem;
+    }
+
+    #productsTable thead th,
+    #productsTable tbody td {
+        padding: 0.5rem;
+    }
+}
+
+/* Loading State (para futuras implementações) */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
