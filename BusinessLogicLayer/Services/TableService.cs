@@ -4,9 +4,10 @@ using BusinessLogicLayer.Models;
 
 namespace BusinessLogicLayer.Services;
 
-public class TableService : ITableService
+public class TableService  //ITableService
 {
     private readonly ITableRepository _tableRepository;
+
 
     public TableService(ITableRepository tableRepository)
     {
@@ -41,25 +42,21 @@ public class TableService : ITableService
 
     public ValidationResult CreateTable(CreateTableDTO createTableDto)
     {
-        // Validação: TableNumber precisa ser um número válido
         if (!int.TryParse(createTableDto.TableNumber, out var number))
         {
             return ValidationResult.Failure("Table Number needs to be a number.", nameof(createTableDto.TableNumber));
         }
 
-        // Validação: número da mesa deve ser positivo
         if (number <= 0)
         {
             return ValidationResult.Failure("Table number must be greater than 0.", nameof(createTableDto.TableNumber));
         }
 
-        // Validação: número de lugares deve ser positivo
         if (createTableDto.Seats <= 0)
         {
             return ValidationResult.Failure("Table seats must be greater than 0.", nameof(createTableDto.Seats));
         }
 
-        // Validação: status não pode estar vazio
         if (string.IsNullOrWhiteSpace(createTableDto.Status))
         {
             return ValidationResult.Failure("Table status is required.", nameof(createTableDto.Status));
@@ -71,19 +68,16 @@ public class TableService : ITableService
 
     public ValidationResult UpdateTable(UpdateTableDTO updateTableDto)
     {
-        // Validação: número da mesa deve ser positivo
         if (updateTableDto.Number <= 0)
         {
             return ValidationResult.Failure("The number of the table needs to be positive.", nameof(updateTableDto.Number));
         }
 
-        // Validação: número de lugares deve ser positivo
         if (updateTableDto.Seats <= 0)
         {
             return ValidationResult.Failure("Table seats must be greater than 0.", nameof(updateTableDto.Seats));
         }
 
-        // Validação: status não pode estar vazio
         if (string.IsNullOrWhiteSpace(updateTableDto.Status))
         {
             return ValidationResult.Failure("Table status is required.", nameof(updateTableDto.Status));

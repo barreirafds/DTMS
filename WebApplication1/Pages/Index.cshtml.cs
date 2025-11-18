@@ -1,5 +1,7 @@
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.DTOs;
+using BusinessLogicLayer.Services;
+using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -64,7 +66,8 @@ namespace DTMS.Pages
 
         public void OnGet()
         {
-            TablesList = _tableService.GetAllTables();
+            TablesList = new TableService(new TableRepository()).GetAllTables();
+            //TablesList = _tableService.GetAllTables();
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
         }

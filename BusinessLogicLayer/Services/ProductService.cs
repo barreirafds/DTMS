@@ -43,13 +43,11 @@ public class ProductService : IProductService
 
     public ValidationResult CreateProduct(CreateProductDTO createProductDto)
     {
-        // Validação: nome e categoria são obrigatórios
         if (string.IsNullOrWhiteSpace(createProductDto.name) || string.IsNullOrWhiteSpace(createProductDto.category))
         {
             return ValidationResult.Failure("Product name and category are required.");
         }
 
-        // Validação: preço deve ser maior que 0
         if (createProductDto.price <= 0)
         {
             return ValidationResult.Failure("Product price must be greater than 0.", nameof(createProductDto.price));

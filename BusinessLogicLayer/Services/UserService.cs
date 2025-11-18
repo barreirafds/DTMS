@@ -41,7 +41,6 @@ public class UserService : IUserService
 
     public ValidationResult CreateUser(CreateUserDTO createUserDto)
     {
-        // Validação: todos os campos são obrigatórios
         if (string.IsNullOrWhiteSpace(createUserDto.Username) ||
             string.IsNullOrWhiteSpace(createUserDto.Password) ||
             string.IsNullOrWhiteSpace(createUserDto.Role))
@@ -49,7 +48,7 @@ public class UserService : IUserService
             return ValidationResult.Failure("All fields are required.");
         }
 
-        // Verificar se o utilizador já existe
+        
         var users = _userRepository.GetUsers();
         if (users.Any(u => u.user1 == createUserDto.Username))
         {
