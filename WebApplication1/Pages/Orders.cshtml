@@ -1,0 +1,132 @@
+@page
+@model DTMS.Pages.OrdersModel
+@using System.Linq
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h1 class="mb-4">Orders by Table</h1>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="row gy-2 gx-2 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label" for="tableSelect">Choose a table to view orders</label>
+                <select class="form-select" id="tableSelect" name="TableId" value="@Model.TableId">
+                    <option value="">Select a table</option>
+                    @foreach (var table in Model.Tables)
+                    {
+                        <option value="@table.Id" selected="@(Model.TableId == table.Id ? "selected" : null)">Table @table.Number (@table.Status)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary">View Orders</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Open a new order</div>
+    <div class="card-body">
+        <form method="post" asp-page-handler="OpenOrder" class="row gy-2 gx-2 align-items-end">
+            <input type="hidden" asp-for="TableId" />
+            <div class="col-md-6">
+                <label asp-for="SelectedTableId" class="form-label"></label>
+                <select asp-for="SelectedTableId" class="form-select">
+                    <option value="">Select a table</option>
+                    @foreach (var table in Model.Tables)
+                    {
+                        <option value="@table.Id">Table @table.Number (@table.Status)</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedTableId" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Open Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.TableId.HasValue && Model.TableId.Value > 0)
+{
+    if (!Model.Orders.Any())
+    {
+        <div class="alert alert-info">No orders found for this table.</div>
+    }
+    else
+    {
+        foreach (var order in Model.Orders)
+        {
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Order #@order.Id</strong> - Table @order.TableId - @order.CreatedAt.ToString("g")
+                    </div>
+                    <div class="fw-bold">Total: @order.Total.ToString("C2")</div>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Line Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in order.Items)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">@item.UnitPrice.ToString("C2")</td>
+                                    <td class="text-end">@item.LineTotal.ToString("C2")</td>
+                                    <td class="text-end">
+                                        <form method="post" asp-page-handler="RemoveItem" class="d-inline">
+                                            <input type="hidden" name="orderItemId" value="@item.Id" />
+                                            <input type="hidden" asp-for="TableId" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <form method="post" asp-page-handler="AddItem" class="row gy-2 gx-2 align-items-end mt-3">
+                        <input type="hidden" asp-for="TableId" />
+                        <input type="hidden" name="SelectedOrderId" value="@order.Id" />
+                        <div class="col-md-5">
+                            <label asp-for="SelectedProductId" class="form-label"></label>
+                            <select asp-for="SelectedProductId" class="form-select">
+                                <option value="">Select a product</option>
+                                @foreach (var product in Model.Products)
+                                {
+                                    <option value="@product.id">@product.name (@product.price.ToString("C2"))</option>
+                                }
+                            </select>
+                            <span asp-validation-for="SelectedProductId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Quantity" class="form-label"></label>
+                            <input asp-for="Quantity" class="form-control" min="1" />
+                            <span asp-validation-for="Quantity" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-success">Add item</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
