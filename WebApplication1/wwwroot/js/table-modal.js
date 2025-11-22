@@ -100,31 +100,68 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Save order
-    saveOrderBtn.addEventListener('click', function() {
+    saveOrderBtn.addEventListener('click', async function() {
         if (addedProducts.length === 0) {
             showAlert('Please add at least one product before saving.', 'warning');
             return;
         }
 
-        // Here you can add logic to send data to the server
+        if (!currentTableId) {
+            showAlert('Table ID is missing.', 'danger');
+            return;
+        }
+
+        // Disable button to prevent double submission
+        saveOrderBtn.disabled = true;
+        saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+        // Prepare order data
         const orderData = {
-            tableId: currentTableId,
-            products: addedProducts,
-            total: calculateTotal()
+            tableId: parseInt(currentTableId),
+            items: addedProducts.map(product => ({
+                productId: product.id,
+                quantity: product.quantity,
+                price: product.price
+            }))
         };
 
-        console.log('Order to save:', orderData);
-        
-        // For now, just show a message
-        showAlert('Order saved successfully! (Feature to be implemented)', 'success');
-        
-        // Close modal after a brief delay
-        setTimeout(() => {
-            const modal = bootstrap.Modal.getInstance(tableModal);
-            if (modal) {
-                modal.hide();
+        try {
+            const response = await fetch('/Index?handler=SaveOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert(result.message || 'Order saved successfully!', 'success');
+                
+                // Clear products and close modal after a brief delay
+                setTimeout(() => {
+                    addedProducts = [];
+                    renderProductsTable();
+                    const modal = bootstrap.Modal.getInstance(tableModal);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    // Reset button state
+                    saveOrderBtn.disabled = false;
+                    saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
+                }, 1500);
+            } else {
+                showAlert(result.message || 'Error saving order. Please try again.', 'danger');
+                saveOrderBtn.disabled = false;
+                saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
             }
-        }, 1500);
+        } catch (error) {
+            console.error('Error saving order:', error);
+            showAlert('An error occurred while saving the order. Please try again.', 'danger');
+            saveOrderBtn.disabled = false;
+            saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
+        }
     });
 
     // Render products table
@@ -145,8 +182,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${escapeHtml(product.name)}</td>
                         <td><span class="badge bg-secondary">${escapeHtml(product.category)}</span></td>
                         <td>${product.quantity}</td>
-                        <td>${product.price.toFixed(2)}€</td>
-                        <td><strong>${total}€</strong></td>
+                        <td>${product.price.toFixed(2)}â‚¬</td>
+                        <td><strong>${total}â‚¬</strong></td>
                         <td>
                             <button class="btn btn-sm btn-danger remove-product-btn" 
                                     data-product-id="${product.id}"
@@ -160,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Update total
-        document.getElementById('totalAmount').textContent = '€' + calculateTotal().toFixed(2);
+        document.getElementById('totalAmount').textContent = calculateTotal().toFixed(2) + 'â‚¬';
     }
 
     // Calculate total
@@ -214,4 +251,3 @@ document.addEventListener('DOMContentLoaded', function() {
         return div.innerHTML;
     }
 });
-

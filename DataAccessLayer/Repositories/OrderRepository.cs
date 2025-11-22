@@ -1,0 +1,122 @@
+using System;
+using System.Collections.Generic;
+using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.Models;
+using Microsoft.Data.SqlClient;
+
+namespace DataAcessLayer.Repositories;
+
+public class OrderRepository : IOrderRepository
+{
+    public string connString = "Server=mssqlstud.fhict.local;Database=dbi570286_dbdtms1;User Id=dbi570286_dbdtms1;Password=root1234;TrustServerCertificate=True;";
+
+    public int CreateOrder(order order)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = @"INSERT INTO [order] ([table_id], [user_id], [status], [created_at]) 
+                               OUTPUT INSERTED.id
+                               VALUES (@table_id, @user_id, @status, @created_at);";
+        
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@table_id", order.table_id);
+        cmd.Parameters.AddWithValue("@user_id", order.user_id);
+        cmd.Parameters.AddWithValue("@status", order.status);
+        cmd.Parameters.AddWithValue("@created_at", order.created_at);
+
+        var orderId = (int)cmd.ExecuteScalar();
+        return orderId;
+    }
+
+    public void CreateOrderItem(order_item orderItem)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = @"INSERT INTO [order_item] ([order_id], [product_id], [qty], [price]) 
+                               VALUES (@order_id, @product_id, @qty, @price);";
+        
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@order_id", orderItem.order_id);
+        cmd.Parameters.AddWithValue("@product_id", orderItem.product_id);
+        cmd.Parameters.AddWithValue("@qty", orderItem.qty);
+        cmd.Parameters.AddWithValue("@price", orderItem.price);
+        
+        cmd.ExecuteNonQuery();
+    }
+
+    public List<order> GetOrders()
+    {
+        var orders = new List<order>();
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT [id], [table_id], [user_id], [status], [created_at] FROM [order] ORDER BY [created_at] DESC;";
+        using var cmd = new SqlCommand(query, conn);
+        using var reader = cmd.ExecuteReader();
+        
+        while (reader.Read())
+        {
+            orders.Add(new order
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                table_id = reader.GetInt32(reader.GetOrdinal("table_id")),
+                user_id = reader.GetInt32(reader.GetOrdinal("user_id")),
+                status = reader.GetString(reader.GetOrdinal("status")),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
+            });
+        }
+        return orders;
+    }
+
+    public order? GetOrder(int id)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT [id], [table_id], [user_id], [status], [created_at] FROM [order] WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return new order
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                table_id = reader.GetInt32(reader.GetOrdinal("table_id")),
+                user_id = reader.GetInt32(reader.GetOrdinal("user_id")),
+                status = reader.GetString(reader.GetOrdinal("status")),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
+            };
+        }
+        return null;
+    }
+
+    public List<order_item> GetOrderItems(int orderId)
+    {
+        var items = new List<order_item>();
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT [id], [order_id], [product_id], [qty], [price] FROM [order_item] WHERE [order_id]=@order_id;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@order_id", orderId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            items.Add(new order_item
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                order_id = reader.GetInt32(reader.GetOrdinal("order_id")),
+                product_id = reader.GetInt32(reader.GetOrdinal("product_id")),
+                qty = reader.GetInt32(reader.GetOrdinal("qty")),
+                price = reader.GetDecimal(reader.GetOrdinal("price"))
+            });
+        }
+        return items;
+    }
+}
+

@@ -5,6 +5,7 @@ using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace DTMS.Pages
 {
@@ -13,12 +14,14 @@ namespace DTMS.Pages
         private readonly ITableService _tableService;
         private readonly IUserService _userService;
         private readonly IProductService _productService;
+        private readonly IOrderService _orderService;
 
-        public IndexModel(ITableService tableService, IUserService userService, IProductService productService)
+        public IndexModel(ITableService tableService, IUserService userService, IProductService productService, IOrderService orderService)
         {
             _tableService = tableService;
             _userService = userService;
             _productService = productService;
+            _orderService = orderService;
         }
 
         [BindProperty, Required(ErrorMessage = "Number of the table is required")]
@@ -159,6 +162,40 @@ namespace DTMS.Pages
         {
             _productService.DeleteProduct(id);
             return RedirectToPage();
+        }
+
+        // Order endpoint
+        [IgnoreAntiforgeryToken]
+        public IActionResult OnPostSaveOrder([FromBody] CreateOrderDTO? createOrderDto)
+        {
+            if (createOrderDto == null)
+            {
+                return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
+            }
+
+            // Get user ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+            {
+                return new JsonResult(new { success = false, message = "User not authenticated or invalid user ID." }) { StatusCode = 401 };
+            }
+
+            // Set user ID from authenticated user
+            createOrderDto.UserId = userId;
+
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
+            }
+
+            var result = _orderService.CreateOrder(createOrderDto);
+
+            if (!result.IsValid)
+            {
+                return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
+            }
+
+            return new JsonResult(new { success = true, message = "Order saved successfully!" });
         }
     }
 }
