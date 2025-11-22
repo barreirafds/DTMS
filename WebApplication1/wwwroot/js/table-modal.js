@@ -145,8 +145,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${escapeHtml(product.name)}</td>
                         <td><span class="badge bg-secondary">${escapeHtml(product.category)}</span></td>
                         <td>${product.quantity}</td>
-                        <td>$${product.price.toFixed(2)}</td>
-                        <td><strong>$${total}</strong></td>
+                        <td>${product.price.toFixed(2)}€</td>
+                        <td><strong>${total}€</strong></td>
                         <td>
                             <button class="btn btn-sm btn-danger remove-product-btn" 
                                     data-product-id="${product.id}"
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Update total
-        document.getElementById('totalAmount').textContent = '$' + calculateTotal().toFixed(2);
+        document.getElementById('totalAmount').textContent = '€' + calculateTotal().toFixed(2);
     }
 
     // Calculate total

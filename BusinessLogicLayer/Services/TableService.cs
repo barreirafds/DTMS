@@ -4,7 +4,7 @@ using BusinessLogicLayer.Models;
 
 namespace BusinessLogicLayer.Services;
 
-public class TableService  //ITableService
+public class TableService : ITableService
 {
     private readonly ITableRepository _tableRepository;
 

@@ -10,7 +10,8 @@
 }
 
 #tableModal .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+    background-color: dodgerblue;
     color: white;
     border-radius: 12px 12px 0 0;
     padding: 1.25rem 1.5rem;
