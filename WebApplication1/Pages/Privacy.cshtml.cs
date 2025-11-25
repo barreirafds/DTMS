@@ -62,11 +62,48 @@ namespace DTMS.Pages
                 CreateOrderDTO? createOrderDto;
                 try
                 {
-                    createOrderDto = await Request.ReadFromJsonAsync<CreateOrderDTO>();
+                    // Ensure body can be read
+                    Request.EnableBuffering();
+                    Request.Body.Position = 0;
+
+                    // Read body as string first
+                    string body;
+                    using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
+                    {
+                        body = await reader.ReadToEndAsync();
+                    }
+                    
+                    // Reset position for potential re-reading
+                    Request.Body.Position = 0;
+
+                    _logger.LogInformation("OnPostSaveOrder: Request body: {Body}", body);
+
+                    if (string.IsNullOrWhiteSpace(body))
+                    {
+                        _logger.LogWarning("OnPostSaveOrder: Empty request body");
+                        Response.ContentType = "application/json";
+                        return new JsonResult(new { success = false, message = "Request body is empty." }) { StatusCode = 400 };
+                    }
+
+                    // Deserialize with proper options
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+
+                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, options);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "OnPostSaveOrder: JSON deserialization failed");
+                    Response.ContentType = "application/json";
+                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "OnPostSaveOrder: Failed to read JSON from request");
+                    Response.ContentType = "application/json";
                     return new JsonResult(new { success = false, message = $"Failed to parse request: {ex.Message}" }) { StatusCode = 400 };
                 }
 
