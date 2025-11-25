@@ -36,6 +36,7 @@ builder.Services.AddRazorPages(options =>
 .AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
 
 // Repository Registrations (Data Access Layer)

@@ -5,6 +5,7 @@ using BusinessLogicLayer.Models;
 using BusinessLogicLayer.DTOs;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 
 namespace DTMS.Pages
 {
@@ -57,41 +58,35 @@ namespace DTMS.Pages
             {
                 _logger.LogInformation("OnPostSaveOrder: Request received");
 
-                // Read request body directly
-                string body;
-                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
-                {
-                    body = await reader.ReadToEndAsync();
-                }
-
-                _logger.LogInformation("OnPostSaveOrder: Request body: {Body}", body);
-
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    _logger.LogWarning("OnPostSaveOrder: Empty request body");
-                    return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
-                }
-
-                // Deserialize JSON
+                // Read JSON from request body
                 CreateOrderDTO? createOrderDto;
                 try
                 {
-                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    });
+                    createOrderDto = await Request.ReadFromJsonAsync<CreateOrderDTO>();
                 }
-                catch (JsonException ex)
+                catch (Exception ex)
                 {
-                    _logger.LogError(ex, "OnPostSaveOrder: JSON deserialization failed");
-                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
+                    _logger.LogError(ex, "OnPostSaveOrder: Failed to read JSON from request");
+                    return new JsonResult(new { success = false, message = $"Failed to parse request: {ex.Message}" }) { StatusCode = 400 };
                 }
 
                 if (createOrderDto == null)
                 {
-                    _logger.LogWarning("OnPostSaveOrder: createOrderDto is null after deserialization");
-                    return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
+                    _logger.LogWarning("OnPostSaveOrder: createOrderDto is null");
+                    return new JsonResult(new { success = false, message = "Invalid order data. Request body is empty or invalid." }) { StatusCode = 400 };
+                }
+
+                // Validate basic data
+                if (createOrderDto.TableId <= 0)
+                {
+                    _logger.LogWarning("OnPostSaveOrder: Invalid TableId: {TableId}", createOrderDto.TableId);
+                    return new JsonResult(new { success = false, message = "Invalid table ID." }) { StatusCode = 400 };
+                }
+
+                if (createOrderDto.Items == null || createOrderDto.Items.Count == 0)
+                {
+                    _logger.LogWarning("OnPostSaveOrder: No items in order");
+                    return new JsonResult(new { success = false, message = "Order must contain at least one item." }) { StatusCode = 400 };
                 }
 
                 _logger.LogInformation("OnPostSaveOrder: Deserialized order - TableId: {TableId}, ItemsCount: {Count}",

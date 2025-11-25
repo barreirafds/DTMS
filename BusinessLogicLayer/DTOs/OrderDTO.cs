@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BusinessLogicLayer.DTOs;
 
@@ -28,15 +29,25 @@ public class OrderItemDTO
 
 public class CreateOrderDTO
 {
+    [JsonPropertyName("tableId")]
     public int TableId { get; set; }
+    
+    [JsonPropertyName("userId")]
     public int UserId { get; set; }
+    
+    [JsonPropertyName("items")]
     public List<CreateOrderItemDTO> Items { get; set; } = new();
 }
 
 public class CreateOrderItemDTO
 {
+    [JsonPropertyName("productId")]
     public int ProductId { get; set; }
+    
+    [JsonPropertyName("quantity")]
     public int Quantity { get; set; }
+    
+    [JsonPropertyName("price")]
     public decimal Price { get; set; }
 }
 
