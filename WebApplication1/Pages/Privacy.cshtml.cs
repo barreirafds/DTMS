@@ -19,6 +19,9 @@ namespace DTMS.Pages
         public List<table> ShowTableEmployee { get; private set; } = new();
         public List<ProductDTO> Products { get; private set; } = new();
 
+        [BindProperty]
+        public OrderInputModel OrderInput { get; set; } = new();
+
         public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService)
         {
             _logger = logger;
@@ -50,114 +53,103 @@ namespace DTMS.Pages
             else return "bg-secondary";
         }
 
-        // Order endpoint - Refactored and robust
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> OnPostSaveOrder()
+        // Save order using model binding
+        public IActionResult OnPostSaveOrder()
         {
             try
             {
-                _logger.LogInformation("OnPostSaveOrder: Request received");
+                _logger.LogInformation("OnPostSaveOrder: Request received - TableId: {TableId}, ItemsCount: {Count}",
+                    OrderInput.TableId, OrderInput.Items?.Count ?? 0);
 
-                // Read JSON from request body
-                CreateOrderDTO? createOrderDto;
-                try
+                // Validate model
+                if (!ModelState.IsValid)
                 {
-                    // Ensure body can be read
-                    Request.EnableBuffering();
-                    Request.Body.Position = 0;
-
-                    // Read body as string first
-                    string body;
-                    using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
-                    {
-                        body = await reader.ReadToEndAsync();
-                    }
-                    
-                    // Reset position for potential re-reading
-                    Request.Body.Position = 0;
-
-                    _logger.LogInformation("OnPostSaveOrder: Request body: {Body}", body);
-
-                    if (string.IsNullOrWhiteSpace(body))
-                    {
-                        _logger.LogWarning("OnPostSaveOrder: Empty request body");
-                        Response.ContentType = "application/json";
-                        return new JsonResult(new { success = false, message = "Request body is empty." }) { StatusCode = 400 };
-                    }
-
-                    // Deserialize with proper options
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    };
-
-                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, options);
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "OnPostSaveOrder: JSON deserialization failed");
-                    Response.ContentType = "application/json";
-                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "OnPostSaveOrder: Failed to read JSON from request");
-                    Response.ContentType = "application/json";
-                    return new JsonResult(new { success = false, message = $"Failed to parse request: {ex.Message}" }) { StatusCode = 400 };
-                }
-
-                if (createOrderDto == null)
-                {
-                    _logger.LogWarning("OnPostSaveOrder: createOrderDto is null");
-                    return new JsonResult(new { success = false, message = "Invalid order data. Request body is empty or invalid." }) { StatusCode = 400 };
+                    _logger.LogWarning("OnPostSaveOrder: Model validation failed");
+                    ShowTableEmployee = _tableRepository.GetTables();
+                    Products = _productService.GetAllProducts();
+                    return Page();
                 }
 
                 // Validate basic data
-                if (createOrderDto.TableId <= 0)
+                if (OrderInput.TableId <= 0)
                 {
-                    _logger.LogWarning("OnPostSaveOrder: Invalid TableId: {TableId}", createOrderDto.TableId);
-                    return new JsonResult(new { success = false, message = "Invalid table ID." }) { StatusCode = 400 };
+                    ModelState.AddModelError("OrderInput.TableId", "Invalid table ID.");
+                    ShowTableEmployee = _tableRepository.GetTables();
+                    Products = _productService.GetAllProducts();
+                    return Page();
                 }
 
-                if (createOrderDto.Items == null || createOrderDto.Items.Count == 0)
+                if (OrderInput.Items == null || OrderInput.Items.Count == 0)
                 {
-                    _logger.LogWarning("OnPostSaveOrder: No items in order");
-                    return new JsonResult(new { success = false, message = "Order must contain at least one item." }) { StatusCode = 400 };
+                    ModelState.AddModelError("OrderInput.Items", "Order must contain at least one item.");
+                    ShowTableEmployee = _tableRepository.GetTables();
+                    Products = _productService.GetAllProducts();
+                    return Page();
                 }
-
-                _logger.LogInformation("OnPostSaveOrder: Deserialized order - TableId: {TableId}, ItemsCount: {Count}",
-                    createOrderDto.TableId, createOrderDto.Items?.Count ?? 0);
 
                 // Get user ID from claims
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
                 {
-                    _logger.LogWarning("OnPostSaveOrder: User not authenticated or invalid user ID");
-                    return new JsonResult(new { success = false, message = "User not authenticated." }) { StatusCode = 401 };
+                    _logger.LogWarning("OnPostSaveOrder: User not authenticated");
+                    ModelState.AddModelError("", "User not authenticated.");
+                    ShowTableEmployee = _tableRepository.GetTables();
+                    Products = _productService.GetAllProducts();
+                    return Page();
                 }
 
-                // Set user ID
-                createOrderDto.UserId = userId;
-                _logger.LogInformation("OnPostSaveOrder: User ID set to: {UserId}", userId);
+                // Convert to DTO
+                var createOrderDto = new CreateOrderDTO
+                {
+                    TableId = OrderInput.TableId,
+                    UserId = userId,
+                    Items = OrderInput.Items.Select(item => new CreateOrderItemDTO
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    }).ToList()
+                };
 
-                // Validate and save order
+                // Save order
                 var result = _orderService.CreateOrder(createOrderDto);
 
                 if (!result.IsValid)
                 {
                     _logger.LogWarning("OnPostSaveOrder: Order validation failed - {Error}", result.ErrorMessage);
-                    return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
+                    ModelState.AddModelError("", result.ErrorMessage ?? "Error creating order.");
+                    ShowTableEmployee = _tableRepository.GetTables();
+                    Products = _productService.GetAllProducts();
+                    return Page();
                 }
 
                 _logger.LogInformation("OnPostSaveOrder: Order saved successfully");
-                return new JsonResult(new { success = true, message = "Order saved successfully!" });
+                TempData["SuccessMessage"] = "Order saved successfully!";
+                return RedirectToPage();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "OnPostSaveOrder: Exception occurred");
-                return new JsonResult(new { success = false, message = $"Error: {ex.Message}" }) { StatusCode = 500 };
+                ModelState.AddModelError("", $"Error: {ex.Message}");
+                ShowTableEmployee = _tableRepository.GetTables();
+                Products = _productService.GetAllProducts();
+                return Page();
             }
         }
+    }
+
+    // Input model for order form
+    public class OrderInputModel
+    {
+        public int TableId { get; set; }
+        public List<OrderItemInputModel> Items { get; set; } = new();
+    }
+
+    public class OrderItemInputModel
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+    }
     }
 }

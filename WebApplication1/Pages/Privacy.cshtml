@@ -40,93 +40,304 @@ else
 }
 
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <!-- Header do Modal -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <!-- Table Information -->
-                <div class="mb-3">
-                    <p><strong>Table #<span id="modalTableNumber">-</span></strong> | 
-                       Seats: <span id="modalTableSeats">-</span> | 
-                       Status: <span id="modalTableStatus" class="badge">-</span></p>
+        <form method="post" asp-page-handler="SaveOrder" id="orderForm">
+            <div class="modal-content">
+                <!-- Header do Modal -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-                <hr>
-
-                <!-- Add Products Section -->
-                <div class="mb-3">
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <select class="form-select form-select-sm" id="productSelect">
-                                <option value="">Select Product</option>
-                                @foreach (var product in Model.Products)
+                
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    @if (!ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                                 {
-                                    <option value="@product.id" 
-                                            data-name="@product.name" 
-                                            data-price="@product.price.ToString("F2")"
-                                            data-category="@product.category">
-                                        @product.name - @product.price.ToString("F2")€
-                                    </option>
+                                    <li>@error.ErrorMessage</li>
                                 }
-                            </select>
+                            </ul>
                         </div>
-                        <div class="col-md-2">
-                            <input type="number" class="form-control form-control-sm" id="productQuantity" min="1" value="1" placeholder="Qty">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="button" class="btn btn-primary btn-sm w-100" id="addProductBtn">Add</button>
+                    }
+
+                    <!-- Table Information -->
+                    <div class="mb-3">
+                        <p><strong>Table #<span id="modalTableNumber">-</span></strong> | 
+                           Seats: <span id="modalTableSeats">-</span> | 
+                           Status: <span id="modalTableStatus" class="badge">-</span></p>
+                        <input type="hidden" asp-for="OrderInput.TableId" id="hiddenTableId" />
+                    </div>
+
+                    <hr>
+
+                    <!-- Add Products Section -->
+                    <div class="mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <select class="form-select form-select-sm" id="productSelect">
+                                    <option value="">Select Product</option>
+                                    @foreach (var product in Model.Products)
+                                    {
+                                        <option value="@product.id" 
+                                                data-name="@product.name" 
+                                                data-price="@product.price.ToString("F2")"
+                                                data-category="@product.category">
+                                            @product.name - @product.price.ToString("F2")€
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control form-control-sm" id="productQuantity" min="1" value="1" placeholder="Qty">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-primary btn-sm w-100" id="addProductBtn">Add</button>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Added Products List -->
+                    <div class="mb-3">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center" style="width: 50px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr id="emptyRow">
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        No products added
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="3" class="text-end fw-bold">Total:</td>
+                                    <td class="text-end fw-bold" id="totalAmount">0.00€</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Hidden fields for order items -->
+                    <div id="orderItemsContainer"></div>
                 </div>
 
-                <!-- Added Products List -->
-                <div class="mb-3">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Product</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Price</th>
-                                <th class="text-end">Total</th>
-                                <th class="text-center" style="width: 50px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTableBody">
-                            <tr id="emptyRow">
-                                <td colspan="5" class="text-center text-muted py-3">
-                                    No products added
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-light">
-                                <td colspan="3" class="text-end fw-bold">Total:</td>
-                                <td class="text-end fw-bold" id="totalAmount">0.00€</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Save Order
+                    </button>
                 </div>
             </div>
-
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="saveOrderBtn">
-                    <i class="bi bi-check-circle"></i> Save Order
-                </button>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 
-<link rel="stylesheet" href="~/css/table-modal.css" asp-append-version="true" />
-<script src="~/js/table-modal.js" asp-append-version="true"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableModal = document.getElementById('tableModal');
+    const productsTableBody = document.getElementById('productsTableBody');
+    const productSelect = document.getElementById('productSelect');
+    const productQuantity = document.getElementById('productQuantity');
+    const addProductBtn = document.getElementById('addProductBtn');
+    const orderForm = document.getElementById('orderForm');
+    const orderItemsContainer = document.getElementById('orderItemsContainer');
+    const hiddenTableId = document.getElementById('hiddenTableId');
+    
+    let addedProducts = [];
+    let currentTableId = null;
+
+    // When modal opens
+    tableModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        
+        currentTableId = button.getAttribute('data-table-id');
+        const tableNumber = button.getAttribute('data-table-number');
+        const tableSeats = button.getAttribute('data-table-seats');
+        const tableStatus = button.getAttribute('data-table-status');
+
+        // Update table information
+        document.getElementById('modalTableNumber').textContent = tableNumber || '-';
+        document.getElementById('modalTableSeats').textContent = tableSeats || '-';
+        
+        const statusBadge = document.getElementById('modalTableStatus');
+        statusBadge.textContent = tableStatus || 'Available';
+        statusBadge.className = 'badge ' + getStatusBadgeClass(tableStatus);
+        
+        // Set hidden table ID
+        hiddenTableId.value = currentTableId;
+        
+        // Clear previous products
+        addedProducts = [];
+        renderProductsTable();
+    });
+
+    // When modal closes
+    tableModal.addEventListener('hidden.bs.modal', function () {
+        productSelect.value = '';
+        productQuantity.value = '1';
+        addedProducts = [];
+        currentTableId = null;
+        orderItemsContainer.innerHTML = '';
+    });
+
+    // Add product
+    addProductBtn.addEventListener('click', function() {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        
+        if (!selectedOption.value) {
+            return;
+        }
+
+        const productId = parseInt(selectedOption.value);
+        const productName = selectedOption.getAttribute('data-name');
+        const productPrice = parseFloat(selectedOption.getAttribute('data-price'));
+        const quantity = parseInt(productQuantity.value) || 1;
+
+        if (quantity <= 0) {
+            return;
+        }
+
+        // Check if product was already added
+        const existingProductIndex = addedProducts.findIndex(p => p.id === productId);
+        
+        if (existingProductIndex >= 0) {
+            addedProducts[existingProductIndex].quantity += quantity;
+        } else {
+            addedProducts.push({
+                id: productId,
+                name: productName,
+                price: productPrice,
+                quantity: quantity
+            });
+        }
+
+        renderProductsTable();
+        productSelect.value = '';
+        productQuantity.value = '1';
+    });
+
+    // Remove product
+    productsTableBody.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-product-btn') || e.target.closest('.remove-product-btn')) {
+            const btn = e.target.closest('.remove-product-btn') || e.target;
+            const productId = parseInt(btn.getAttribute('data-product-id'));
+            addedProducts = addedProducts.filter(p => p.id !== productId);
+            renderProductsTable();
+        }
+    });
+
+    // Render products table and create hidden inputs
+    function renderProductsTable() {
+        // Clear container
+        orderItemsContainer.innerHTML = '';
+
+        if (addedProducts.length === 0) {
+            productsTableBody.innerHTML = `
+                <tr id="emptyRow">
+                    <td colspan="5" class="text-center text-muted py-3">
+                        No products added
+                    </td>
+                </tr>
+            `;
+        } else {
+            // Render table rows
+            productsTableBody.innerHTML = addedProducts.map((product) => {
+                const total = (product.price * product.quantity).toFixed(2);
+                return `
+                    <tr>
+                        <td>${escapeHtml(product.name)}</td>
+                        <td class="text-center">${product.quantity}</td>
+                        <td class="text-end">${product.price.toFixed(2)}€</td>
+                        <td class="text-end">${total}€</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger remove-product-btn" 
+                                    data-product-id="${product.id}"
+                                    title="Remove">
+                                ×
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Create hidden inputs for form submission
+            addedProducts.forEach((product, index) => {
+                const productIdInput = document.createElement('input');
+                productIdInput.type = 'hidden';
+                productIdInput.name = `OrderInput.Items[${index}].ProductId`;
+                productIdInput.value = product.id;
+                orderItemsContainer.appendChild(productIdInput);
+
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'hidden';
+                quantityInput.name = `OrderInput.Items[${index}].Quantity`;
+                quantityInput.value = product.quantity;
+                orderItemsContainer.appendChild(quantityInput);
+
+                const priceInput = document.createElement('input');
+                priceInput.type = 'hidden';
+                priceInput.name = `OrderInput.Items[${index}].Price`;
+                priceInput.value = product.price;
+                orderItemsContainer.appendChild(priceInput);
+            });
+        }
+
+        // Update total
+        document.getElementById('totalAmount').textContent = calculateTotal().toFixed(2) + '€';
+    }
+
+    // Calculate total
+    function calculateTotal() {
+        return addedProducts.reduce((sum, product) => {
+            return sum + (product.price * product.quantity);
+        }, 0);
+    }
+
+    // Get status badge class
+    function getStatusBadgeClass(status) {
+        const s = (status || 'Available').toLowerCase();
+        if (s === 'available') return 'bg-success';
+        else if (s === 'occupied') return 'bg-danger';
+        else if (s === 'reserved') return 'bg-warning';
+        else return 'bg-secondary';
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Form validation before submit
+    orderForm.addEventListener('submit', function(e) {
+        if (addedProducts.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one product before saving.');
+            return false;
+        }
+    });
+});
+</script>
 
