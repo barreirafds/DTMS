@@ -57,18 +57,14 @@ namespace DTMS.Pages
             {
                 _logger.LogInformation("OnPostSaveOrder: Request received");
 
-                // Read request body
-                Request.EnableBuffering();
-                Request.Body.Position = 0;
-                
+                // Read request body directly
                 string body;
-                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
+                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
                 {
                     body = await reader.ReadToEndAsync();
                 }
-                Request.Body.Position = 0;
 
-                _logger.LogInformation("OnPostSaveOrder: Request body length: {Length}", body?.Length ?? 0);
+                _logger.LogInformation("OnPostSaveOrder: Request body: {Body}", body);
 
                 if (string.IsNullOrWhiteSpace(body))
                 {

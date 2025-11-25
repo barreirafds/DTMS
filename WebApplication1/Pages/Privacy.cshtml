@@ -52,87 +52,67 @@ else
             <!-- Modal Body -->
             <div class="modal-body">
                 <!-- Table Information -->
-                <div class="table-info-section mb-4">
-                    <h6 class="text-muted mb-3">Table Information</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <p><strong>Number:</strong> <span id="modalTableNumber">-</span></p>
-                        </div>
-                        <div class="col-md-4">
-                            <p><strong>Seats:</strong> <span id="modalTableSeats">-</span></p>
-                        </div>
-                        <div class="col-md-4">
-                            <p><strong>Status:</strong> <span id="modalTableStatus" class="badge">-</span></p>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <p><strong>Table #<span id="modalTableNumber">-</span></strong> | 
+                       Seats: <span id="modalTableSeats">-</span> | 
+                       Status: <span id="modalTableStatus" class="badge">-</span></p>
                 </div>
 
-                <hr class="my-4">
+                <hr>
 
                 <!-- Add Products Section -->
-                <div class="add-product-section mb-4">
-                    <h6 class="text-muted mb-3">Add Products</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="productSelect" class="form-label">Select Product</label>
-                            <select class="form-select" id="productSelect">
-                                <option value="">-- Choose Product --</option>
+                <div class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <select class="form-select form-select-sm" id="productSelect">
+                                <option value="">Select Product</option>
                                 @foreach (var product in Model.Products)
                                 {
                                     <option value="@product.id" 
                                             data-name="@product.name" 
                                             data-price="@product.price.ToString("F2")"
                                             data-category="@product.category">
-                                        @product.name - @product.price.ToString("F2")€ (@product.category)
+                                        @product.name - @product.price.ToString("F2")€
                                     </option>
                                 }
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="productQuantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="productQuantity" min="1" value="1">
+                        <div class="col-md-2">
+                            <input type="number" class="form-control form-control-sm" id="productQuantity" min="1" value="1" placeholder="Qty">
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-primary w-100" id="addProductBtn">
-                                <i class="bi bi-plus-circle"></i> Add
-                            </button>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="addProductBtn">Add</button>
                         </div>
                     </div>
                 </div>
 
-                <hr class="my-4">
-
                 <!-- Added Products List -->
-                <div class="products-list-section">
-                    <h6 class="text-muted mb-3">Added Products</h6>
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="productsTable">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Category</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Price</th>
-                                    <th>Total</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="productsTableBody">
-                                <tr id="emptyRow">
-                                    <td colspan="6" class="text-center text-muted">
-                                        No products added yet
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-info fw-bold">
-                                    <td colspan="4" class="text-end">Total:</td>
-                                    <td id="totalAmount">0.00€</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                <div class="mb-3">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center" style="width: 50px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr id="emptyRow">
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No products added
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold">Total:</td>
+                                <td class="text-end fw-bold" id="totalAmount">0.00€</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
 
