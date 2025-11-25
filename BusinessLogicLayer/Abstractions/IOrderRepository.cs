@@ -4,6 +4,7 @@ namespace BusinessLogicLayer.Abstractions;
 
 public interface IOrderRepository
 {
+    int CreateOrderWithItems(order order, List<order_item> orderItems);
     int CreateOrder(order order);
     void CreateOrderItem(order_item orderItem);
     List<order> GetOrders();

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
 using BusinessLogicLayer.DTOs;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace DTMS.Pages
 {
@@ -11,15 +13,17 @@ namespace DTMS.Pages
         private readonly ILogger<PrivacyModel> _logger;
         private readonly ITableRepository _tableRepository;
         private readonly IProductService _productService;
+        private readonly IOrderService _orderService;
 
         public List<table> ShowTableEmployee { get; private set; } = new();
         public List<ProductDTO> Products { get; private set; } = new();
 
-        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService)
+        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService)
         {
             _logger = logger;
             _tableRepository = tableRepository;
             _productService = productService;
+            _orderService = orderService;
         }
 
         public void OnGet()
@@ -43,6 +47,89 @@ namespace DTMS.Pages
             else if (s == "occupied") return "bg-danger";
             else if (s == "reserved") return "bg-warning";
             else return "bg-secondary";
+        }
+
+        // Order endpoint - Refactored and robust
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> OnPostSaveOrder()
+        {
+            try
+            {
+                _logger.LogInformation("OnPostSaveOrder: Request received");
+
+                // Read request body
+                Request.EnableBuffering();
+                Request.Body.Position = 0;
+                
+                string body;
+                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
+                {
+                    body = await reader.ReadToEndAsync();
+                }
+                Request.Body.Position = 0;
+
+                _logger.LogInformation("OnPostSaveOrder: Request body length: {Length}", body?.Length ?? 0);
+
+                if (string.IsNullOrWhiteSpace(body))
+                {
+                    _logger.LogWarning("OnPostSaveOrder: Empty request body");
+                    return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
+                }
+
+                // Deserialize JSON
+                CreateOrderDTO? createOrderDto;
+                try
+                {
+                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "OnPostSaveOrder: JSON deserialization failed");
+                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
+                }
+
+                if (createOrderDto == null)
+                {
+                    _logger.LogWarning("OnPostSaveOrder: createOrderDto is null after deserialization");
+                    return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
+                }
+
+                _logger.LogInformation("OnPostSaveOrder: Deserialized order - TableId: {TableId}, ItemsCount: {Count}",
+                    createOrderDto.TableId, createOrderDto.Items?.Count ?? 0);
+
+                // Get user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+                {
+                    _logger.LogWarning("OnPostSaveOrder: User not authenticated or invalid user ID");
+                    return new JsonResult(new { success = false, message = "User not authenticated." }) { StatusCode = 401 };
+                }
+
+                // Set user ID
+                createOrderDto.UserId = userId;
+                _logger.LogInformation("OnPostSaveOrder: User ID set to: {UserId}", userId);
+
+                // Validate and save order
+                var result = _orderService.CreateOrder(createOrderDto);
+
+                if (!result.IsValid)
+                {
+                    _logger.LogWarning("OnPostSaveOrder: Order validation failed - {Error}", result.ErrorMessage);
+                    return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
+                }
+
+                _logger.LogInformation("OnPostSaveOrder: Order saved successfully");
+                return new JsonResult(new { success = true, message = "Order saved successfully!" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "OnPostSaveOrder: Exception occurred");
+                return new JsonResult(new { success = false, message = $"Error: {ex.Message}" }) { StatusCode = 500 };
+            }
         }
     }
 }

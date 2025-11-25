@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace DTMS.Pages
 {
@@ -164,38 +165,72 @@ namespace DTMS.Pages
             return RedirectToPage();
         }
 
-        // Order endpoint
+        // Order endpoint - Refactored and robust
         [IgnoreAntiforgeryToken]
-        public IActionResult OnPostSaveOrder([FromBody] CreateOrderDTO? createOrderDto)
+        public async Task<IActionResult> OnPostSaveOrder()
         {
-            if (createOrderDto == null)
+            try
             {
-                return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
-            }
+                // Read request body
+                Request.EnableBuffering();
+                Request.Body.Position = 0;
+                
+                string body;
+                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
+                {
+                    body = await reader.ReadToEndAsync();
+                }
+                Request.Body.Position = 0;
 
-            // Get user ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+                if (string.IsNullOrWhiteSpace(body))
+                {
+                    return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
+                }
+
+                // Deserialize JSON
+                CreateOrderDTO? createOrderDto;
+                try
+                {
+                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+                }
+                catch (JsonException ex)
+                {
+                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
+                }
+
+                if (createOrderDto == null)
+                {
+                    return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
+                }
+
+                // Get user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "User not authenticated." }) { StatusCode = 401 };
+                }
+
+                // Set user ID
+                createOrderDto.UserId = userId;
+
+                // Validate and save order
+                var result = _orderService.CreateOrder(createOrderDto);
+
+                if (!result.IsValid)
+                {
+                    return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
+                }
+
+                return new JsonResult(new { success = true, message = "Order saved successfully!" });
+            }
+            catch (Exception ex)
             {
-                return new JsonResult(new { success = false, message = "User not authenticated or invalid user ID." }) { StatusCode = 401 };
+                return new JsonResult(new { success = false, message = $"Error: {ex.Message}" }) { StatusCode = 500 };
             }
-
-            // Set user ID from authenticated user
-            createOrderDto.UserId = userId;
-
-            if (!ModelState.IsValid)
-            {
-                return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
-            }
-
-            var result = _orderService.CreateOrder(createOrderDto);
-
-            if (!result.IsValid)
-            {
-                return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
-            }
-
-            return new JsonResult(new { success = true, message = "Order saved successfully!" });
         }
     }
 }

@@ -61,7 +61,7 @@ public class OrderService : IOrderService
             }
         }
 
-        // Create order
+        // Create order and items in a single transaction
         var order = new order
         {
             table_id = createOrderDto.TableId,
@@ -70,23 +70,26 @@ public class OrderService : IOrderService
             created_at = DateTime.Now
         };
 
-        var orderId = _orderRepository.CreateOrder(order);
-
-        // Create order items
+        var orderItems = new List<order_item>();
         foreach (var item in createOrderDto.Items)
         {
-            var orderItem = new order_item
+            orderItems.Add(new order_item
             {
-                order_id = orderId,
                 product_id = item.ProductId,
                 qty = item.Quantity,
                 price = item.Price
-            };
-
-            _orderRepository.CreateOrderItem(orderItem);
+            });
         }
 
-        return ValidationResult.Success();
+        try
+        {
+            var orderId = _orderRepository.CreateOrderWithItems(order, orderItems);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error saving order to database: {ex.Message}");
+        }
     }
 
     public List<OrderDTO> GetAllOrders()

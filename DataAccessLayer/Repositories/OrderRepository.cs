@@ -10,6 +10,51 @@ public class OrderRepository : IOrderRepository
 {
     public string connString = "Server=mssqlstud.fhict.local;Database=dbi570286_dbdtms1;User Id=dbi570286_dbdtms1;Password=root1234;TrustServerCertificate=True;";
 
+    public int CreateOrderWithItems(order order, List<order_item> orderItems)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+        
+        using var transaction = conn.BeginTransaction();
+        try
+        {
+            // Create order
+            const string orderQuery = @"INSERT INTO [order] ([table_id], [user_id], [status], [created_at]) 
+                                       OUTPUT INSERTED.id
+                                       VALUES (@table_id, @user_id, @status, @created_at);";
+            
+            using var orderCmd = new SqlCommand(orderQuery, conn, transaction);
+            orderCmd.Parameters.AddWithValue("@table_id", order.table_id);
+            orderCmd.Parameters.AddWithValue("@user_id", order.user_id);
+            orderCmd.Parameters.AddWithValue("@status", order.status);
+            orderCmd.Parameters.AddWithValue("@created_at", order.created_at);
+
+            var orderId = (int)orderCmd.ExecuteScalar();
+
+            // Create order items
+            const string itemQuery = @"INSERT INTO [order_item] ([order_id], [product_id], [qty], [price]) 
+                                      VALUES (@order_id, @product_id, @qty, @price);";
+            
+            foreach (var item in orderItems)
+            {
+                using var itemCmd = new SqlCommand(itemQuery, conn, transaction);
+                itemCmd.Parameters.AddWithValue("@order_id", orderId);
+                itemCmd.Parameters.AddWithValue("@product_id", item.product_id);
+                itemCmd.Parameters.AddWithValue("@qty", item.qty);
+                itemCmd.Parameters.AddWithValue("@price", item.price);
+                itemCmd.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return orderId;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
     public int CreateOrder(order order)
     {
         using var conn = new SqlConnection(connString);

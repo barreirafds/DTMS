@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Save order
+    // Save order - Refactored and robust
     saveOrderBtn.addEventListener('click', async function() {
         if (addedProducts.length === 0) {
             showAlert('Please add at least one product before saving.', 'warning');
@@ -113,30 +113,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Disable button to prevent double submission
         saveOrderBtn.disabled = true;
+        const originalButtonText = saveOrderBtn.innerHTML;
         saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
 
-        // Prepare order data
+        // Prepare order data with correct property names (matching C# DTO)
         const orderData = {
-            tableId: parseInt(currentTableId),
-            items: addedProducts.map(product => ({
-                productId: product.id,
-                quantity: product.quantity,
-                price: product.price
+            TableId: parseInt(currentTableId),
+            Items: addedProducts.map(product => ({
+                ProductId: product.id,
+                Quantity: product.quantity,
+                Price: product.price
             }))
         };
 
+        console.log('Sending order data:', JSON.stringify(orderData, null, 2));
+
         try {
-            const response = await fetch('/Index?handler=SaveOrder', {
+            // Determine the current page to use the correct endpoint
+            const currentPath = window.location.pathname;
+            const handlerPath = currentPath.includes('/Privacy') ? '/Privacy?handler=SaveOrder' : '/Index?handler=SaveOrder';
+            
+            console.log('Sending to:', handlerPath);
+
+            const response = await fetch(handlerPath, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(orderData)
             });
 
-            const result = await response.json();
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
 
-            if (result.success) {
+            // Read response as text first
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                showAlert(`Server error: ${response.status} - ${responseText || 'Invalid response format'}`, 'danger');
+                saveOrderBtn.disabled = false;
+                saveOrderBtn.innerHTML = originalButtonText;
+                return;
+            }
+
+            console.log('Parsed result:', result);
+
+            if (response.ok && result.success) {
                 showAlert(result.message || 'Order saved successfully!', 'success');
                 
                 // Clear products and close modal after a brief delay
@@ -147,20 +175,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (modal) {
                         modal.hide();
                     }
-                    // Reset button state
                     saveOrderBtn.disabled = false;
-                    saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
+                    saveOrderBtn.innerHTML = originalButtonText;
                 }, 1500);
             } else {
-                showAlert(result.message || 'Error saving order. Please try again.', 'danger');
+                const errorMessage = result.message || result.error || `Error ${response.status}: Failed to save order`;
+                showAlert(errorMessage, 'danger');
                 saveOrderBtn.disabled = false;
-                saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
+                saveOrderBtn.innerHTML = originalButtonText;
             }
         } catch (error) {
             console.error('Error saving order:', error);
-            showAlert('An error occurred while saving the order. Please try again.', 'danger');
+            showAlert('An error occurred while saving the order: ' + (error.message || 'Unknown error'), 'danger');
             saveOrderBtn.disabled = false;
-            saveOrderBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Order';
+            saveOrderBtn.innerHTML = originalButtonText;
         }
     });
 
