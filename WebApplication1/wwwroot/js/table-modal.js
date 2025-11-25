@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         productSelect.value = '';
         productQuantity.value = '1';
         
-        showAlert('Product added successfully!', 'success');
+        // No alert for adding product - cleaner UX
     });
 
     // Remove product
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const productId = parseInt(e.target.getAttribute('data-product-id'));
             addedProducts = addedProducts.filter(p => p.id !== productId);
             renderProductsTable();
-            showAlert('Product removed.', 'info');
+            // Product removed silently
         }
     });
 
@@ -116,30 +116,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalButtonText = saveOrderBtn.innerHTML;
         saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
 
-        // Prepare order data with correct property names (matching C# DTO)
+        // Prepare order data with camelCase property names
         const orderData = {
-            TableId: parseInt(currentTableId),
-            Items: addedProducts.map(product => ({
-                ProductId: product.id,
-                Quantity: product.quantity,
-                Price: product.price
+            tableId: parseInt(currentTableId),
+            items: addedProducts.map(product => ({
+                productId: product.id,
+                quantity: product.quantity,
+                price: product.price
             }))
         };
 
-        console.log('Sending order data:', JSON.stringify(orderData, null, 2));
+        console.log('Order data to send:', JSON.stringify(orderData, null, 2));
 
         try {
             // Determine the current page to use the correct endpoint
             const currentPath = window.location.pathname;
             const handlerPath = currentPath.includes('/Privacy') ? '/Privacy?handler=SaveOrder' : '/Index?handler=SaveOrder';
-            
+
             console.log('Sending to:', handlerPath);
 
             const response = await fetch(handlerPath, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(orderData)
             });
@@ -147,22 +146,31 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Response status:', response.status);
             console.log('Response ok:', response.ok);
 
-            // Read response as text first
+            // Read response
+            let result;
             const responseText = await response.text();
             console.log('Response text:', responseText);
-
-            let result;
-            try {
-                result = JSON.parse(responseText);
-            } catch (parseError) {
-                console.error('Failed to parse JSON response:', parseError);
-                showAlert(`Server error: ${response.status} - ${responseText || 'Invalid response format'}`, 'danger');
+            
+            // Handle empty response
+            if (!responseText || responseText.trim() === '') {
+                console.error('Empty response from server');
+                showAlert(`Server error: ${response.status} - Empty response. Please check server logs.`, 'danger');
                 saveOrderBtn.disabled = false;
                 saveOrderBtn.innerHTML = originalButtonText;
                 return;
             }
-
-            console.log('Parsed result:', result);
+            
+            try {
+                result = JSON.parse(responseText);
+                console.log('Parsed result:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                console.error('Response text was:', responseText);
+                showAlert(`Server error: ${response.status} - ${responseText.substring(0, 200) || 'Invalid response format'}`, 'danger');
+                saveOrderBtn.disabled = false;
+                saveOrderBtn.innerHTML = originalButtonText;
+                return;
+            }
 
             if (response.ok && result.success) {
                 showAlert(result.message || 'Order saved successfully!', 'success');
@@ -197,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (addedProducts.length === 0) {
             productsTableBody.innerHTML = `
                 <tr id="emptyRow">
-                    <td colspan="6" class="text-center text-muted">
-                        No products added yet
+                    <td colspan="5" class="text-center text-muted py-3">
+                        No products added
                     </td>
                 </tr>
             `;
@@ -208,15 +216,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `
                     <tr>
                         <td>${escapeHtml(product.name)}</td>
-                        <td><span class="badge bg-secondary">${escapeHtml(product.category)}</span></td>
-                        <td>${product.quantity}</td>
-                        <td>${product.price.toFixed(2)}€</td>
-                        <td><strong>${total}€</strong></td>
-                        <td>
+                        <td class="text-center">${product.quantity}</td>
+                        <td class="text-end">${product.price.toFixed(2)}€</td>
+                        <td class="text-end">${total}€</td>
+                        <td class="text-center">
                             <button class="btn btn-sm btn-danger remove-product-btn" 
                                     data-product-id="${product.id}"
                                     title="Remove">
-                                <i class="bi bi-trash"></i>
+                                ×
                             </button>
                         </td>
                     </tr>
