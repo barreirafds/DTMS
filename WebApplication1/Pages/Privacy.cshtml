@@ -67,11 +67,81 @@ else
                     </div>
                 </div>
 
+                <hr class="my-4">
+
+                <!-- Add Products Section -->
+                <div class="add-product-section mb-4">
+                    <h6 class="text-muted mb-3">Add Products</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="productSelect" class="form-label">Select Product</label>
+                            <select class="form-select" id="productSelect">
+                                <option value="">-- Choose Product --</option>
+                                @foreach (var product in Model.Products)
+                                {
+                                    <option value="@product.id" 
+                                            data-name="@product.name" 
+                                            data-price="@product.price.ToString("F2")"
+                                            data-category="@product.category">
+                                        @product.name - @product.price.ToString("F2")€ (@product.category)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="productQuantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="productQuantity" min="1" value="1">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-100" id="addProductBtn">
+                                <i class="bi bi-plus-circle"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Added Products List -->
+                <div class="products-list-section">
+                    <h6 class="text-muted mb-3">Added Products</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr id="emptyRow">
+                                    <td colspan="6" class="text-center text-muted">
+                                        No products added yet
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info fw-bold">
+                                    <td colspan="4" class="text-end">Total:</td>
+                                    <td id="totalAmount">0.00€</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="saveOrderBtn">
+                    <i class="bi bi-check-circle"></i> Save Order
+                </button>
             </div>
         </div>
     </div>
