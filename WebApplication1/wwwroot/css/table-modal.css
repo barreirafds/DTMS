@@ -10,11 +10,11 @@
 }
 
 #tableModal .modal-header {
-    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-    background-color: dodgerblue;
-    color: white;
+    background-color: #18313F;
+    color: #F7EDE1;
     border-radius: 12px 12px 0 0;
     padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid #B26E46;
 }
 
 #tableModal .modal-header .modal-title {
@@ -38,10 +38,10 @@
 
 /* Table Info Section */
 .table-info-section {
-    background-color: #f8f9fa;
+    background-color: #F7EDE1;
     padding: 1.25rem;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #B26E46;
 }
 
 .table-info-section h6 {
@@ -73,15 +73,18 @@
 }
 
 #addProductBtn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #18313F;
     border: none;
+    color: #F7EDE1;
     font-weight: 500;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 #addProductBtn:hover {
+    background-color: #B26E46;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(178, 110, 70, 0.4);
+    color: #F7EDE1;
 }
 
 #addProductBtn:active {
@@ -103,13 +106,13 @@
 }
 
 #productsTable thead {
-    background-color: #f8f9fa;
+    background-color: #F7EDE1;
 }
 
 #productsTable thead th {
     font-weight: 600;
-    color: #495057;
-    border-bottom: 2px solid #dee2e6;
+    color: #18313F;
+    border-bottom: 2px solid #B26E46;
     padding: 0.75rem;
 }
 
@@ -118,7 +121,7 @@
 }
 
 #productsTable tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #F7EDE1;
 }
 
 #productsTable tbody td {
@@ -127,8 +130,8 @@
 }
 
 #productsTable tfoot {
-    background-color: #e7f3ff;
-    border-top: 2px solid #0d6efd;
+    background-color: #F7EDE1;
+    border-top: 2px solid #B26E46;
 }
 
 #productsTable tfoot td {
@@ -137,8 +140,9 @@
 }
 
 #totalAmount {
-    color: #0d6efd;
+    color: #18313F;
     font-size: 1.25rem;
+    font-weight: 600;
 }
 
 /* Remove Button */
@@ -165,29 +169,32 @@
 /* Form Controls */
 #productSelect:focus,
 #productQuantity:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    border-color: #B26E46;
+    box-shadow: 0 0 0 0.25rem rgba(178, 110, 70, 0.25);
 }
 
 /* Modal Footer */
 #tableModal .modal-footer {
-    border-top: 1px solid #dee2e6;
+    border-top: 2px solid #B26E46;
     padding: 1rem 1.5rem;
-    background-color: #f8f9fa;
+    background-color: #F7EDE1;
     border-radius: 0 0 12px 12px;
 }
 
 #saveOrderBtn {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    background-color: #B26E46;
     border: none;
+    color: #F7EDE1;
     font-weight: 500;
     padding: 0.5rem 1.5rem;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 #saveOrderBtn:hover {
+    background-color: #9a5d38;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    box-shadow: 0 4px 12px rgba(178, 110, 70, 0.4);
+    color: #F7EDE1;
 }
 
 #saveOrderBtn:active {

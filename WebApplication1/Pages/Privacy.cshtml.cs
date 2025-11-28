@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
 using BusinessLogicLayer.DTOs;
+using System.Security.Claims;
 
 namespace DTMS.Pages
 {
@@ -16,17 +17,50 @@ namespace DTMS.Pages
         public List<table> ShowTableEmployee { get; private set; } = new();
         public List<ProductDTO> Products { get; private set; } = new();
 
-        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService)
+        [BindProperty]
+        public int OrderTableId { get; set; }
+
+        [BindProperty]
+        public List<OrderItemInput> OrderItems { get; set; } = new();
+
+        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService)
         {
             _logger = logger;
             _tableRepository = tableRepository;
             _productService = productService;
+            _orderService = orderService;
         }
 
         public void OnGet()
         {
             ShowTableEmployee = _tableRepository.GetTables();
             Products = _productService.GetAllProducts();
+        }
+
+        public IActionResult OnGetTableOrders(int tableId)
+        {
+            // Get only the pending order for this table (most recent)
+            var pendingOrder = _orderService.GetPendingOrderByTableId(tableId);
+            
+            if (pendingOrder == null)
+            {
+                return new JsonResult(new { hasPendingOrder = false, items = new List<object>() });
+            }
+
+            var items = pendingOrder.Items.Select(item => new
+            {
+                productId = item.ProductId,
+                productName = item.ProductName,
+                quantity = item.Quantity,
+                price = item.Price
+            }).ToList();
+
+            return new JsonResult(new 
+            { 
+                hasPendingOrder = true,
+                orderId = pendingOrder.Id,
+                items = items 
+            });
         }
 
         public string showtables()
@@ -46,6 +80,87 @@ namespace DTMS.Pages
             else return "bg-secondary";
         }
 
+        // Order endpoint - Save order to database
+        public IActionResult OnPostSaveOrder()
+        {
+            // Get user ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+            {
+                ModelState.AddModelError("", "User not authenticated.");
+                OnGet();
+                return Page();
+            }
+
+            // Validate order data
+            if (OrderTableId <= 0)
+            {
+                ModelState.AddModelError("", "Table ID is required.");
+                OnGet();
+                return Page();
+            }
+
+            if (OrderItems == null || OrderItems.Count == 0)
+            {
+                ModelState.AddModelError("", "Order must contain at least one item.");
+                OnGet();
+                return Page();
+            }
+
+            // Create DTO from form data
+            var createOrderDto = new CreateOrderDTO
+            {
+                TableId = OrderTableId,
+                UserId = userId,
+                Items = OrderItems.Select(item => new CreateOrderItemDTO
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                }).ToList()
+            };
+
+            // Validate and save order
+            var result = _orderService.CreateOrder(createOrderDto);
+
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError("", result.ErrorMessage ?? "Error creating order.");
+                OnGet();
+                return Page();
+            }
+
+            return RedirectToPage();
+        }
+
+        // Pay order endpoint - Update order status to Paid
+        public IActionResult OnPostPayOrder(int orderId)
+        {
+            if (orderId <= 0)
+            {
+                ModelState.AddModelError("", "Invalid order ID.");
+                OnGet();
+                return Page();
+            }
+
+            var result = _orderService.UpdateOrderStatus(orderId, "Paid");
+
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError("", result.ErrorMessage ?? "Error updating order status.");
+                OnGet();
+                return Page();
+            }
+
+            return RedirectToPage();
+        }
     }
+
+    // Helper class for form binding
+    public class OrderItemInput
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
     }
 }

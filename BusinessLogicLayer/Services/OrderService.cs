@@ -160,5 +160,97 @@ public class OrderService : IOrderService
             Items = itemsDto
         };
     }
+
+    public List<OrderDTO> GetOrdersByTableId(int tableId)
+    {
+        var orders = _orderRepository.GetOrdersByTableId(tableId);
+        var ordersDto = new List<OrderDTO>();
+
+        foreach (var order in orders)
+        {
+            var items = _orderRepository.GetOrderItems(order.id);
+            var itemsDto = new List<OrderItemDTO>();
+
+            foreach (var item in items)
+            {
+                var product = _productRepository.GetProduct(item.product_id);
+                itemsDto.Add(new OrderItemDTO
+                {
+                    Id = item.id,
+                    OrderId = item.order_id,
+                    ProductId = item.product_id,
+                    ProductName = product?.name ?? "Unknown",
+                    Quantity = item.qty,
+                    Price = item.price
+                });
+            }
+
+            ordersDto.Add(new OrderDTO
+            {
+                Id = order.id,
+                TableId = order.table_id,
+                UserId = order.user_id,
+                Status = order.status,
+                CreatedAt = order.created_at,
+                Items = itemsDto
+            });
+        }
+
+        return ordersDto;
+    }
+
+    public OrderDTO? GetPendingOrderByTableId(int tableId)
+    {
+        var order = _orderRepository.GetPendingOrderByTableId(tableId);
+        if (order == null) return null;
+
+        var items = _orderRepository.GetOrderItems(order.id);
+        var itemsDto = items.Select(item =>
+        {
+            var product = _productRepository.GetProduct(item.product_id);
+            return new OrderItemDTO
+            {
+                Id = item.id,
+                OrderId = item.order_id,
+                ProductId = item.product_id,
+                ProductName = product?.name ?? "Unknown",
+                Quantity = item.qty,
+                Price = item.price
+            };
+        }).ToList();
+
+        return new OrderDTO
+        {
+            Id = order.id,
+            TableId = order.table_id,
+            UserId = order.user_id,
+            Status = order.status,
+            CreatedAt = order.created_at,
+            Items = itemsDto
+        };
+    }
+
+    public ValidationResult UpdateOrderStatus(int orderId, string status)
+    {
+        if (orderId <= 0)
+        {
+            return ValidationResult.Failure("Order ID must be greater than 0.", nameof(orderId));
+        }
+
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return ValidationResult.Failure("Status is required.", nameof(status));
+        }
+
+        try
+        {
+            _orderRepository.UpdateOrderStatus(orderId, status);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error updating order status: {ex.Message}");
+        }
+    }
 }
 

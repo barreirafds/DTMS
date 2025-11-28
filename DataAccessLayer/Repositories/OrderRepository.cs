@@ -139,6 +139,55 @@ public class OrderRepository : IOrderRepository
         return null;
     }
 
+    public List<order> GetOrdersByTableId(int tableId)
+    {
+        var orders = new List<order>();
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT [id], [table_id], [user_id], [status], [created_at] FROM [order] WHERE [table_id]=@table_id ORDER BY [created_at] DESC;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@table_id", tableId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            orders.Add(new order
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                table_id = reader.GetInt32(reader.GetOrdinal("table_id")),
+                user_id = reader.GetInt32(reader.GetOrdinal("user_id")),
+                status = reader.GetString(reader.GetOrdinal("status")),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
+            });
+        }
+        return orders;
+    }
+
+    public order? GetPendingOrderByTableId(int tableId)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT TOP 1 [id], [table_id], [user_id], [status], [created_at] FROM [order] WHERE [table_id]=@table_id AND [status]='Pending' ORDER BY [created_at] DESC;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@table_id", tableId);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return new order
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                table_id = reader.GetInt32(reader.GetOrdinal("table_id")),
+                user_id = reader.GetInt32(reader.GetOrdinal("user_id")),
+                status = reader.GetString(reader.GetOrdinal("status")),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
+            };
+        }
+        return null;
+    }
+
     public List<order_item> GetOrderItems(int orderId)
     {
         var items = new List<order_item>();
@@ -162,6 +211,19 @@ public class OrderRepository : IOrderRepository
             });
         }
         return items;
+    }
+
+    public void UpdateOrderStatus(int orderId, string status)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "UPDATE [order] SET [status]=@status WHERE [id]=@id;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@id", orderId);
+        cmd.Parameters.AddWithValue("@status", status);
+
+        cmd.ExecuteNonQuery();
     }
 }
 
