@@ -1,43 +1,43 @@
+using Auth0.AspNetCore.Authentication;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Services;
 using DataAcessLayer.Repositories;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//defining the main language of the project
-var cultureInfo = new CultureInfo("en-EN");
-CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+// AUTH0 Authentication Configuration
+builder.Services.AddAuth0WebAppAuthentication(options =>
+{
+    options.Domain = builder.Configuration["Auth0:Domain"] ?? throw new InvalidOperationException("Auth0:Domain configuration is missing");
+    options.ClientId = builder.Configuration["Auth0:ClientId"] ?? throw new InvalidOperationException("Auth0:ClientId configuration is missing");
+    options.Scope = "openid profile email";
+    options.CallbackPath = "/Callback";
+});
 
-// AUTHENTICATION
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Login";
-    });
-
-// AUTORIZATION 
+// Authorization
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 });
-    
 
+// Razor Pages Configuration
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AllowAnonymousToPage("/Login");
     options.Conventions.AllowAnonymousToPage("/Register");
+    options.Conventions.AllowAnonymousToPage("/Callback");
+    options.Conventions.AllowAnonymousToPage("/Logout");
 })
 .AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
+
+builder.Services.AddControllersWithViews();
 
 // Repository Registrations (Data Access Layer)
 builder.Services.AddScoped<ITableRepository, TableRepository>();
@@ -53,6 +53,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
+
+// Configure the HTTP request pipeline
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

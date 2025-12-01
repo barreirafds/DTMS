@@ -5,50 +5,10 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <h2 class="text-center mb-4">Login</h2>
-        
-        @if (ViewData["Message"] != null)
-        {
-            <div class="alert alert-danger">
-                @ViewData["Message"]
-            </div>
-        }
-
-        <form method="post">
-            @Html.AntiForgeryToken()
-            
-            <div class="mb-3">
-                <label for="Username" class="form-label">Username</label>
-                <input type="text" class="form-control" 
-                       id="Username" name="Username" asp-for="Username" 
-                       required autofocus>
-                <span asp-validation-for="Username" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label for="Password" class="form-label">Password</label>
-                <input type="password" class="form-control" 
-                       id="Password" name="Password" asp-for="Password" 
-                       required>
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="rememberMe">
-                <label class="form-check-label" for="rememberMe">
-                    Remember me
-                </label>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
-
-            <div class="text-center">
-                <p class="mb-0">
-                    Don't have an account? 
-                    <a asp-page="/Register">Register</a>
-                </p>
-            </div>
-        </form>
+        <div class="alert alert-info">
+            <p class="mb-0">Redirecionando para Auth0...</p>
+        </div>
     </div>
 </div>

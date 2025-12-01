@@ -1,0 +1,52 @@
+URLs para copiar e colar no Auth0 Dashboard
+=============================================
+
+IMPORTANTE: Remova os backticks (```) antes de colar no Auth0 Dashboard!
+
+=============================================
+ALLOWED CALLBACK URLs:
+=============================================
+https://localhost:7003/Callback,http://localhost:5150/Callback,https://localhost:44369/Callback,http://localhost:10498/Callback
+
+OU cole uma URL por vez (se o Auth0 não aceitar vírgulas):
+
+https://localhost:7003/Callback
+http://localhost:5150/Callback
+https://localhost:44369/Callback
+http://localhost:10498/Callback
+
+=============================================
+ALLOWED LOGOUT URLs:
+=============================================
+https://localhost:7003/,http://localhost:5150/,https://localhost:44369/,http://localhost:10498/
+
+OU uma URL por vez:
+
+https://localhost:7003/
+http://localhost:5150/
+https://localhost:44369/
+http://localhost:10498/
+
+=============================================
+ALLOWED WEB ORIGINS:
+=============================================
+https://localhost:7003,http://localhost:5150,https://localhost:44369,http://localhost:10498
+
+OU uma URL por vez:
+
+https://localhost:7003
+http://localhost:5150
+https://localhost:44369
+http://localhost:10498
+
+=============================================
+TESTE INICIAL (use apenas esta URL para começar):
+=============================================
+Se estiver tendo problemas, comece adicionando apenas UMA URL de cada vez:
+
+Callback: https://localhost:7003/Callback
+Logout: https://localhost:7003/
+Web Origin: https://localhost:7003
+
+Depois de testar e funcionar, adicione as outras portas.
+
