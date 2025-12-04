@@ -12,23 +12,15 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.Domain = builder.Configuration["Auth0:Domain"] ?? throw new InvalidOperationException("Auth0:Domain configuration is missing");
     options.ClientId = builder.Configuration["Auth0:ClientId"] ?? throw new InvalidOperationException("Auth0:ClientId configuration is missing");
     options.Scope = "openid profile email";
-    options.CallbackPath = "/Callback";
 });
 
-// Authorization
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
+;
 
 // Razor Pages Configuration
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AllowAnonymousToPage("/Login");
     options.Conventions.AllowAnonymousToPage("/Register");
-    options.Conventions.AllowAnonymousToPage("/Callback");
     options.Conventions.AllowAnonymousToPage("/Logout");
 })
 .AddJsonOptions(options =>
