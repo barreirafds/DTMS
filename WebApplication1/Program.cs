@@ -3,6 +3,11 @@ using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Services;
 using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+
+Console.WriteLine("Base path: " + Directory.GetCurrentDirectory());
+
+Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 var builder = WebApplication.CreateBuilder(args);
 
