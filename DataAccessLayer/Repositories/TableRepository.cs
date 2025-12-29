@@ -14,84 +14,120 @@ public class TableRepository : ITableRepository
     public List<table> GetTables()
     {
         var tables = new List<table>();
-        using var conn = new SqlConnection(connString);
-        conn.Open();
-
-        const string query = "SELECT [id], [number], [seats], [status] FROM [table] ORDER BY [id];";
-        using var cmd = new SqlCommand(query, conn);
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        try
         {
-            tables.Add(new table
+            using var conn = new SqlConnection(connString);
+            conn.Open();
+
+            const string query = "SELECT [id], [number], [seats], [status] FROM [table] ORDER BY [id];";
+            using var cmd = new SqlCommand(query, conn);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                id = reader.GetInt32(reader.GetOrdinal("id")),
-                number = reader.GetInt32(reader.GetOrdinal("number")),
-                seats = reader.GetInt32(reader.GetOrdinal("seats")),
-                status = reader.GetString(reader.GetOrdinal("status"))
-            });
+                tables.Add(new table
+                {
+                    id = reader.GetInt32(reader.GetOrdinal("id")),
+                    number = reader.GetInt32(reader.GetOrdinal("number")),
+                    seats = reader.GetInt32(reader.GetOrdinal("seats")),
+                    status = reader.GetString(reader.GetOrdinal("status"))
+                });
+            }
+        }
+        catch (Exception)
+        {
+            // Return empty list if database connection fails
+            return tables;
         }
         return tables;
     }
 
     public table? GetTable(int id)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
-
-        const string query = "SELECT [id], [number], [seats], [status] FROM [table] WHERE [id]=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@id", id);
-
-        using var reader = cmd.ExecuteReader();
-        if (reader.Read())
+        try
         {
-            return new table
+            using var conn = new SqlConnection(connString);
+            conn.Open();
+
+            const string query = "SELECT [id], [number], [seats], [status] FROM [table] WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
             {
-                id = reader.GetInt32(reader.GetOrdinal("id")),
-                number = reader.GetInt32(reader.GetOrdinal("number")),
-                seats = reader.GetInt32(reader.GetOrdinal("seats")),
-                status = reader.GetString(reader.GetOrdinal("status"))
-            };
+                return new table
+                {
+                    id = reader.GetInt32(reader.GetOrdinal("id")),
+                    number = reader.GetInt32(reader.GetOrdinal("number")),
+                    seats = reader.GetInt32(reader.GetOrdinal("seats")),
+                    status = reader.GetString(reader.GetOrdinal("status"))
+                };
+            }
+        }
+        catch (Exception)
+        {
+            // Return null if database connection fails
         }
         return null;
     }
 
     public void CreateTable(int number, int seats, string status)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "INSERT INTO [table] ([number], [seats], [status]) VALUES (@number, @seats, @status);";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@number", number);
-        cmd.Parameters.AddWithValue("@seats", seats);
-        cmd.Parameters.AddWithValue("@status", status);
-        cmd.ExecuteNonQuery();
+            const string query = "INSERT INTO [table] ([number], [seats], [status]) VALUES (@number, @seats, @status);";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@number", number);
+            cmd.Parameters.AddWithValue("@seats", seats);
+            cmd.Parameters.AddWithValue("@status", status);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 
     public void UpdateTable(table t)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "UPDATE [table] SET [number]=@number, [seats]=@seats, [status]=@status WHERE [id]=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@number", t.number);
-        cmd.Parameters.AddWithValue("@seats", t.seats);
-        cmd.Parameters.AddWithValue("@status", t.status);
-        cmd.Parameters.AddWithValue("@id", t.id);
-        cmd.ExecuteNonQuery();
+            const string query = "UPDATE [table] SET [number]=@number, [seats]=@seats, [status]=@status WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@number", t.number);
+            cmd.Parameters.AddWithValue("@seats", t.seats);
+            cmd.Parameters.AddWithValue("@status", t.status);
+            cmd.Parameters.AddWithValue("@id", t.id);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 
     public void DeleteTable(int id)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "DELETE FROM [table] WHERE [id]=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
+            const string query = "DELETE FROM [table] WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 }
 

@@ -1,15 +1,25 @@
 using Auth0.AspNetCore.Authentication;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Services;
+using DataAcessLayer;
 using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using WebApplication1.Middleware;
 
 Console.WriteLine("Base path: " + Directory.GetCurrentDirectory());
 
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Get connection string from configuration
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? "Server=mssqlstud.fhict.local;Database=dbi570286_dbdtms1;User Id=dbi570286_dbdtms1;Password=root1234;TrustServerCertificate=True;";
+
+// Register Database Connection Service as Singleton to check connection status
+builder.Services.AddSingleton<DatabaseConnectionService>(provider => 
+    new DatabaseConnectionService(connectionString));
 
 // AUTH0 Authentication Configuration
 builder.Services.AddAuth0WebAppAuthentication(options =>
@@ -51,6 +61,17 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 
+// Check database connection on startup
+var dbService = app.Services.GetRequiredService<DatabaseConnectionService>();
+var isConnected = dbService.IsDatabaseConnected();
+
+if (!isConnected)
+{
+    // Log warning if database is not connected
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogWarning("Database is not connected. The application will run in limited mode.");
+}
+
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
@@ -69,6 +90,9 @@ app.Use(async (context, next) =>
     context.Request.EnableBuffering();
     await next();
 });
+
+// Use database connection check middleware
+app.UseDatabaseConnectionCheck();
 
 app.UseAuthentication();
 app.UseAuthorization();

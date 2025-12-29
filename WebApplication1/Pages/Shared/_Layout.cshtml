@@ -69,6 +69,18 @@
         </nav>
     </header>
     <div class="container">
+        @{
+            var isDbConnected = Context.Items["DatabaseConnected"] as bool? ?? false;
+        }
+        @if (!isDbConnected)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="margin-top: 20px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> 
+                <strong>Warning:</strong> The database is not connected or not functioning properly. 
+                The application is running in limited mode. Please check the database connection.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

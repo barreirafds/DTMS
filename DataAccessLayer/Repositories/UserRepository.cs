@@ -13,59 +13,81 @@ public class UserRepository : IUserRepository
     public List<user> GetUsers()
     {
         var users = new List<user>();
-        using var conn = new SqlConnection(connString);
-        conn.Open();
-
-        const string query = "SELECT [id], [user], [password], [role] FROM [user] ORDER BY [id];";
-        using var cmd = new SqlCommand(query, conn);
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        try
         {
-            users.Add(new user
+            using var conn = new SqlConnection(connString);
+            conn.Open();
+
+            const string query = "SELECT [id], [user], [password], [role] FROM [user] ORDER BY [id];";
+            using var cmd = new SqlCommand(query, conn);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                id = reader.IsDBNull(0) ? null : reader.GetInt32(0),
-                user1 = reader.IsDBNull(1) ? null : reader.GetString(1),
-                password = reader.IsDBNull(2) ? null : reader.GetString(2),
-                role = reader.IsDBNull(3) ? null : reader.GetString(3)
-            });
+                users.Add(new user
+                {
+                    id = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                    user1 = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    password = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    role = reader.IsDBNull(3) ? null : reader.GetString(3)
+                });
+            }
+        }
+        catch (Exception)
+        {
+            // Return empty list if database connection fails
+            return users;
         }
         return users;
     }
 
     public user? GetUser(int id)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
-
-        const string query = "SELECT [id], [user], [password], [role] FROM [user] WHERE [id]=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@id", id);
-
-        using var reader = cmd.ExecuteReader();
-        if (reader.Read())
+        try
         {
-            return new user
+            using var conn = new SqlConnection(connString);
+            conn.Open();
+
+            const string query = "SELECT [id], [user], [password], [role] FROM [user] WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
             {
-                id = reader.IsDBNull(0) ? null : reader.GetInt32(0),
-                user1 = reader.IsDBNull(1) ? null : reader.GetString(1),
-                password = reader.IsDBNull(2) ? null : reader.GetString(2),
-                role = reader.IsDBNull(3) ? null : reader.GetString(3)
-            };
+                return new user
+                {
+                    id = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                    user1 = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    password = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    role = reader.IsDBNull(3) ? null : reader.GetString(3)
+                };
+            }
+        }
+        catch (Exception)
+        {
+            // Return null if database connection fails
         }
         return null;
     }
 
     public void CreateUser(string username, string password, string role)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "INSERT INTO [user] ([user], [password], [role]) VALUES (@username, @password, @role);";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@username", username);
-        cmd.Parameters.AddWithValue("@password", password);
-        cmd.Parameters.AddWithValue("@role", role);
-        cmd.ExecuteNonQuery();
+            const string query = "INSERT INTO [user] ([user], [password], [role]) VALUES (@username, @password, @role);";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@password", password);
+            cmd.Parameters.AddWithValue("@role", role);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 
     public void UpdateUser(user u)
@@ -75,27 +97,41 @@ public class UserRepository : IUserRepository
             return;
         }
 
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "UPDATE [user] SET [user]=@username, [password]=@password, [role]=@role WHERE [id]=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@username", u.user1 ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@password", u.password ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@role", u.role ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@id", u.id.Value);
-        cmd.ExecuteNonQuery();
+            const string query = "UPDATE [user] SET [user]=@username, [password]=@password, [role]=@role WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@username", u.user1 ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@password", u.password ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@role", u.role ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", u.id.Value);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 
     public void DeleteUser(int id)
     {
-        using var conn = new SqlConnection(connString);
-        conn.Open();
+        try
+        {
+            using var conn = new SqlConnection(connString);
+            conn.Open();
 
-        const string query = "DELETE FROM [user] WHERE `id`=@id;";
-        using var cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
+            const string query = "DELETE FROM [user] WHERE [id]=@id;";
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+            // Ignore error if database connection fails
+        }
     }
 }
 
