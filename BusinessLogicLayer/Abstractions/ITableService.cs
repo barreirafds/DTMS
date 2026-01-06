@@ -8,7 +8,7 @@ public interface ITableService
     TableDTO? GetTableById(int id);
     ValidationResult CreateTable(CreateTableDTO createTableDto);
     ValidationResult UpdateTable(UpdateTableDTO updateTableDto);
-    void DeleteTable(int id);
+    ValidationResult DeleteTable(int id);
     string GetStatusBadgeStyle(string status);
 }
 

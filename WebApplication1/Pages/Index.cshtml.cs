@@ -72,8 +72,7 @@ namespace DTMS.Pages
 
         public void OnGet()
         {
-            TablesList = new TableService(new TableRepository()).GetAllTables();
-            //TablesList = _tableService.GetAllTables();
+            TablesList = _tableService.GetAllTables();
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
         }
@@ -101,7 +100,16 @@ namespace DTMS.Pages
 
         public IActionResult OnPostDelete(int id)
         {
-            _tableService.DeleteTable(id);
+            var result = _tableService.DeleteTable(id);
+            
+            if (!result.IsValid)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Error deleting table.";
+                OnGet();
+                return Page();
+            }
+
+            TempData["SuccessMessage"] = "Table deleted successfully!";
             return RedirectToPage();
         }
 

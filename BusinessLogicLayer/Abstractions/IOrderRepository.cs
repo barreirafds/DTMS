@@ -13,5 +13,6 @@ public interface IOrderRepository
     order? GetPendingOrderByTableId(int tableId);
     List<order_item> GetOrderItems(int orderId);
     void UpdateOrderStatus(int orderId, string status);
+    void DeleteOrdersByTableId(int tableId);
 }
 

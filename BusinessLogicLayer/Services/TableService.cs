@@ -7,11 +7,12 @@ namespace BusinessLogicLayer.Services;
 public class TableService : ITableService
 {
     private readonly ITableRepository _tableRepository;
+    private readonly IOrderRepository _orderRepository;
 
-
-    public TableService(ITableRepository tableRepository)
+    public TableService(ITableRepository tableRepository, IOrderRepository orderRepository)
     {
         _tableRepository = tableRepository;
+        _orderRepository = orderRepository;
     }
 
     public List<TableDTO> GetAllTables()
@@ -95,9 +96,29 @@ public class TableService : ITableService
         return ValidationResult.Success();
     }
 
-    public void DeleteTable(int id)
+    public ValidationResult DeleteTable(int id)
     {
-        _tableRepository.DeleteTable(id);
+        try
+        {
+            // Check if table exists
+            var table = _tableRepository.GetTable(id);
+            if (table == null)
+            {
+                return ValidationResult.Failure("Table not found.");
+            }
+
+            // Delete all related orders and order items first
+            _orderRepository.DeleteOrdersByTableId(id);
+
+            // Now delete the table
+            _tableRepository.DeleteTable(id);
+            
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error deleting table: {ex.Message}");
+        }
     }
 
     public string GetStatusBadgeStyle(string status)

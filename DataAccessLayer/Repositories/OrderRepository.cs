@@ -225,5 +225,53 @@ public class OrderRepository : IOrderRepository
 
         cmd.ExecuteNonQuery();
     }
+
+    public void DeleteOrdersByTableId(int tableId)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+        
+        using var transaction = conn.BeginTransaction();
+        try
+        {
+            // First, get all order IDs for this table
+            var orderIds = new List<int>();
+            const string getOrdersQuery = "SELECT [id] FROM [order] WHERE [table_id]=@table_id;";
+            using (var getOrdersCmd = new SqlCommand(getOrdersQuery, conn, transaction))
+            {
+                getOrdersCmd.Parameters.AddWithValue("@table_id", tableId);
+                using var reader = getOrdersCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    orderIds.Add(reader.GetInt32(reader.GetOrdinal("id")));
+                }
+            }
+
+            // Delete all order_items for these orders
+            if (orderIds.Count > 0)
+            {
+                const string deleteItemsQuery = "DELETE FROM [order_item] WHERE [order_id]=@order_id;";
+                foreach (var orderId in orderIds)
+                {
+                    using var deleteItemsCmd = new SqlCommand(deleteItemsQuery, conn, transaction);
+                    deleteItemsCmd.Parameters.AddWithValue("@order_id", orderId);
+                    deleteItemsCmd.ExecuteNonQuery();
+                }
+            }
+
+            // Finally, delete all orders for this table
+            const string deleteOrdersQuery = "DELETE FROM [order] WHERE [table_id]=@table_id;";
+            using var deleteOrdersCmd = new SqlCommand(deleteOrdersQuery, conn, transaction);
+            deleteOrdersCmd.Parameters.AddWithValue("@table_id", tableId);
+            deleteOrdersCmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }
 
