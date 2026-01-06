@@ -19,14 +19,13 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.Scope = "openid profile email";
 });
 
-;
-
 // Razor Pages Configuration
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AllowAnonymousToPage("/Login");
     options.Conventions.AllowAnonymousToPage("/Register");
     options.Conventions.AllowAnonymousToPage("/Logout");
+    options.Conventions.AllowAnonymousToPage("/Callback");
 })
 .AddJsonOptions(options =>
 {

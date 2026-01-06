@@ -7,13 +7,23 @@ namespace DTMS.Pages
 {
     public class LogoutModel : PageModel
     {
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
-            var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri("/")
-                .Build();
+            try
+            {
+                var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+                    .WithRedirectUri("/")
+                    .Build();
 
-            await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+                await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+                return new EmptyResult();
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed
+                TempData["ErrorMessage"] = $"An error occurred during logout: {ex.Message}";
+                return RedirectToPage("/");
+            }
         }
     }
 }

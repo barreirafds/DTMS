@@ -7,13 +7,23 @@ namespace DTMS.Pages
 {
     public class LoginModel : PageModel
     {
-        public async Task OnGet(string returnUrl = "/")
+        public async Task<IActionResult> OnGet(string returnUrl = "/")
         {
-            var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
-                .WithRedirectUri(returnUrl)
-                .Build();
+            try
+            {
+                var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+                    .WithRedirectUri(returnUrl)
+                    .Build();
 
-            await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+                await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+                return new EmptyResult();
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed
+                TempData["ErrorMessage"] = $"An error occurred during login: {ex.Message}";
+                return RedirectToPage("/Login");
+            }
         }
     }
 }

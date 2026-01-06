@@ -13,6 +13,7 @@ namespace DTMS.Pages
         private readonly ITableRepository _tableRepository;
         private readonly IProductService _productService;
         private readonly IOrderService _orderService;
+        private readonly IUserRepository _userRepository;
 
         public List<table> ShowTableEmployee { get; private set; } = new();
         public List<ProductDTO> Products { get; private set; } = new();
@@ -23,12 +24,13 @@ namespace DTMS.Pages
         [BindProperty]
         public List<OrderItemInput> OrderItems { get; set; } = new();
 
-        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService)
+        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService, IUserRepository userRepository)
         {
             _logger = logger;
             _tableRepository = tableRepository;
             _productService = productService;
             _orderService = orderService;
+            _userRepository = userRepository;
         }
 
         public void OnGet()
@@ -80,14 +82,56 @@ namespace DTMS.Pages
             else return "bg-secondary";
         }
 
+        // Helper method to get or create user from Auth0 claims
+        private int GetOrCreateUserIdFromAuth0()
+        {
+            // Try to get the user identifier from Auth0 claims
+            // Auth0 uses "sub" claim for user ID, or we can use email/name
+            var subClaim = User.FindFirst("sub")?.Value;
+            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+            var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+            
+            // Use email if available, otherwise use name, otherwise use sub
+            var username = emailClaim ?? nameClaim ?? subClaim ?? "auth0_user";
+            
+            // Try to find existing user by username
+            var existingUser = _userRepository.GetUserByUsername(username);
+            if (existingUser?.id != null && existingUser.id > 0)
+            {
+                return existingUser.id.Value;
+            }
+            
+            // Create a new user if not found (with default role)
+            var defaultRole = "Employee"; // Default role for Auth0 users
+            _userRepository.CreateUser(username, "", defaultRole); // Empty password for Auth0 users
+            
+            // Get the newly created user
+            var newUser = _userRepository.GetUserByUsername(username);
+            if (newUser?.id != null && newUser.id > 0)
+            {
+                return newUser.id.Value;
+            }
+            
+            // Fallback: return 1 if something goes wrong (you may want to handle this differently)
+            return 1;
+        }
+
         // Order endpoint - Save order to database
         public IActionResult OnPostSaveOrder()
         {
-            // Get user ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
+            // Check if user is authenticated
+            if (!User.Identity?.IsAuthenticated ?? true)
             {
                 TempData["ErrorMessage"] = "User not authenticated. Please log in again.";
+                OnGet();
+                return RedirectToPage();
+            }
+
+            // Get or create user ID from Auth0 claims
+            var userId = GetOrCreateUserIdFromAuth0();
+            if (userId <= 0)
+            {
+                TempData["ErrorMessage"] = "Unable to determine user. Please log in again.";
                 OnGet();
                 return RedirectToPage();
             }

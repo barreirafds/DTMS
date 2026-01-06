@@ -55,6 +55,29 @@ public class UserRepository : IUserRepository
         return null;
     }
 
+    public user? GetUserByUsername(string username)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT [id], [user], [password], [role] FROM [user] WHERE [user]=@username;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@username", username);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return new user
+            {
+                id = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                user1 = reader.IsDBNull(1) ? null : reader.GetString(1),
+                password = reader.IsDBNull(2) ? null : reader.GetString(2),
+                role = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+        }
+        return null;
+    }
+
     public void CreateUser(string username, string password, string role)
     {
         using var conn = new SqlConnection(connString);
