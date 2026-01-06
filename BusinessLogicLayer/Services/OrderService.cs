@@ -20,7 +20,6 @@ public class OrderService : IOrderService
         // Validate table ID
         if (createOrderDto.TableId <= 0)
         {
-            throw new ArgumentException(); // change from validation result to argumentationException
             return ValidationResult.Failure("Table ID must be greater than 0.", nameof(createOrderDto.TableId));
         }
 

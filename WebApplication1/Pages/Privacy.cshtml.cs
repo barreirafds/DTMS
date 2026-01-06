@@ -87,24 +87,24 @@ namespace DTMS.Pages
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId) || userId <= 0)
             {
-                ModelState.AddModelError("", "User not authenticated.");
+                TempData["ErrorMessage"] = "User not authenticated. Please log in again.";
                 OnGet();
-                return Page();
+                return RedirectToPage();
             }
 
             // Validate order data
             if (OrderTableId <= 0)
             {
-                ModelState.AddModelError("", "Table ID is required.");
+                TempData["ErrorMessage"] = "Table ID is required.";
                 OnGet();
-                return Page();
+                return RedirectToPage();
             }
 
             if (OrderItems == null || OrderItems.Count == 0)
             {
-                ModelState.AddModelError("", "Order must contain at least one item.");
+                TempData["ErrorMessage"] = "Order must contain at least one item.";
                 OnGet();
-                return Page();
+                return RedirectToPage();
             }
 
             // Create DTO from form data
@@ -125,11 +125,12 @@ namespace DTMS.Pages
 
             if (!result.IsValid)
             {
-                ModelState.AddModelError("", result.ErrorMessage ?? "Error creating order.");
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Error creating order.";
                 OnGet();
-                return Page();
+                return RedirectToPage();
             }
 
+            TempData["SuccessMessage"] = $"Order saved successfully for Table #{OrderTableId}!";
             return RedirectToPage();
         }
 
