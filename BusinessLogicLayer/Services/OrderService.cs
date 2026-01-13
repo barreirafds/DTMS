@@ -103,87 +103,61 @@ public class OrderService : IOrderService
 
     public List<OrderDTO> GetAllOrders()
     {
-        var orders = _orderRepository.GetOrders();
-        var ordersDto = new List<OrderDTO>();
-
-        foreach (var order in orders)
+        try
         {
-            var items = _orderRepository.GetOrderItems(order.id);
-            var itemsDto = new List<OrderItemDTO>();
+            var orders = _orderRepository.GetOrders();
+            var ordersDto = new List<OrderDTO>();
 
-            foreach (var item in items)
+            foreach (var order in orders)
             {
-                var product = _productRepository.GetProduct(item.product_id);
-                itemsDto.Add(new OrderItemDTO
+                var items = _orderRepository.GetOrderItems(order.id);
+                var itemsDto = new List<OrderItemDTO>();
+
+                foreach (var item in items)
                 {
-                    Id = item.id,
-                    OrderId = item.order_id,
-                    ProductId = item.product_id,
-                    ProductName = product?.name ?? "Unknown",
-                    Quantity = item.qty,
-                    Price = item.price
+                    var product = _productRepository.GetProduct(item.product_id);
+                    itemsDto.Add(new OrderItemDTO
+                    {
+                        Id = item.id,
+                        OrderId = item.order_id,
+                        ProductId = item.product_id,
+                        ProductName = product?.name ?? "Unknown",
+                        Quantity = item.qty,
+                        Price = item.price
+                    });
+                }
+
+                ordersDto.Add(new OrderDTO
+                {
+                    Id = order.id,
+                    TableId = order.table_id,
+                    UserId = order.user_id,
+                    Status = order.status,
+                    CreatedAt = order.created_at,
+                    Items = itemsDto
                 });
             }
 
-            ordersDto.Add(new OrderDTO
-            {
-                Id = order.id,
-                TableId = order.table_id,
-                UserId = order.user_id,
-                Status = order.status,
-                CreatedAt = order.created_at,
-                Items = itemsDto
-            });
+            return ordersDto;
         }
-
-        return ordersDto;
+        catch (Exception)
+        {
+            return new List<OrderDTO>();
+        }
     }
 
     public OrderDTO? GetOrderById(int id)
     {
-        var order = _orderRepository.GetOrder(id);
-        if (order == null) return null;
-
-        var items = _orderRepository.GetOrderItems(order.id);
-        var itemsDto = items.Select(item =>
+        try
         {
-            var product = _productRepository.GetProduct(item.product_id);
-            return new OrderItemDTO
-            {
-                Id = item.id,
-                OrderId = item.order_id,
-                ProductId = item.product_id,
-                ProductName = product?.name ?? "Unknown",
-                Quantity = item.qty,
-                Price = item.price
-            };
-        }).ToList();
+            var order = _orderRepository.GetOrder(id);
+            if (order == null) return null;
 
-        return new OrderDTO
-        {
-            Id = order.id,
-            TableId = order.table_id,
-            UserId = order.user_id,
-            Status = order.status,
-            CreatedAt = order.created_at,
-            Items = itemsDto
-        };
-    }
-
-    public List<OrderDTO> GetOrdersByTableId(int tableId)
-    {
-        var orders = _orderRepository.GetOrdersByTableId(tableId);
-        var ordersDto = new List<OrderDTO>();
-
-        foreach (var order in orders)
-        {
             var items = _orderRepository.GetOrderItems(order.id);
-            var itemsDto = new List<OrderItemDTO>();
-
-            foreach (var item in items)
+            var itemsDto = items.Select(item =>
             {
                 var product = _productRepository.GetProduct(item.product_id);
-                itemsDto.Add(new OrderItemDTO
+                return new OrderItemDTO
                 {
                     Id = item.id,
                     OrderId = item.order_id,
@@ -191,10 +165,10 @@ public class OrderService : IOrderService
                     ProductName = product?.name ?? "Unknown",
                     Quantity = item.qty,
                     Price = item.price
-                });
-            }
+                };
+            }).ToList();
 
-            ordersDto.Add(new OrderDTO
+            return new OrderDTO
             {
                 Id = order.id,
                 TableId = order.table_id,
@@ -202,41 +176,95 @@ public class OrderService : IOrderService
                 Status = order.status,
                 CreatedAt = order.created_at,
                 Items = itemsDto
-            });
+            };
         }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
-        return ordersDto;
+    public List<OrderDTO> GetOrdersByTableId(int tableId)
+    {
+        try
+        {
+            var orders = _orderRepository.GetOrdersByTableId(tableId);
+            var ordersDto = new List<OrderDTO>();
+
+            foreach (var order in orders)
+            {
+                var items = _orderRepository.GetOrderItems(order.id);
+                var itemsDto = new List<OrderItemDTO>();
+
+                foreach (var item in items)
+                {
+                    var product = _productRepository.GetProduct(item.product_id);
+                    itemsDto.Add(new OrderItemDTO
+                    {
+                        Id = item.id,
+                        OrderId = item.order_id,
+                        ProductId = item.product_id,
+                        ProductName = product?.name ?? "Unknown",
+                        Quantity = item.qty,
+                        Price = item.price
+                    });
+                }
+
+                ordersDto.Add(new OrderDTO
+                {
+                    Id = order.id,
+                    TableId = order.table_id,
+                    UserId = order.user_id,
+                    Status = order.status,
+                    CreatedAt = order.created_at,
+                    Items = itemsDto
+                });
+            }
+
+            return ordersDto;
+        }
+        catch (Exception)
+        {
+            return new List<OrderDTO>();
+        }
     }
 
     public OrderDTO? GetPendingOrderByTableId(int tableId)
     {
-        var order = _orderRepository.GetPendingOrderByTableId(tableId);
-        if (order == null) return null;
-
-        var items = _orderRepository.GetOrderItems(order.id);
-        var itemsDto = items.Select(item =>
+        try
         {
-            var product = _productRepository.GetProduct(item.product_id);
-            return new OrderItemDTO
+            var order = _orderRepository.GetPendingOrderByTableId(tableId);
+            if (order == null) return null;
+
+            var items = _orderRepository.GetOrderItems(order.id);
+            var itemsDto = items.Select(item =>
             {
-                Id = item.id,
-                OrderId = item.order_id,
-                ProductId = item.product_id,
-                ProductName = product?.name ?? "Unknown",
-                Quantity = item.qty,
-                Price = item.price
-            };
-        }).ToList();
+                var product = _productRepository.GetProduct(item.product_id);
+                return new OrderItemDTO
+                {
+                    Id = item.id,
+                    OrderId = item.order_id,
+                    ProductId = item.product_id,
+                    ProductName = product?.name ?? "Unknown",
+                    Quantity = item.qty,
+                    Price = item.price
+                };
+            }).ToList();
 
-        return new OrderDTO
+            return new OrderDTO
+            {
+                Id = order.id,
+                TableId = order.table_id,
+                UserId = order.user_id,
+                Status = order.status,
+                CreatedAt = order.created_at,
+                Items = itemsDto
+            };
+        }
+        catch (Exception)
         {
-            Id = order.id,
-            TableId = order.table_id,
-            UserId = order.user_id,
-            Status = order.status,
-            CreatedAt = order.created_at,
-            Items = itemsDto
-        };
+            return null;
+        }
     }
 
     public ValidationResult UpdateOrderStatus(int orderId, string status)

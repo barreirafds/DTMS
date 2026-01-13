@@ -17,28 +17,42 @@ public class TableService : ITableService
 
     public List<TableDTO> GetAllTables()
     {
-        var tables = _tableRepository.GetTables();
-        return tables.Select(t => new TableDTO
+        try
         {
-            Id = t.id,
-            Number = t.number,
-            Seats = t.seats,
-            Status = t.status
-        }).ToList();
+            var tables = _tableRepository.GetTables();
+            return tables.Select(t => new TableDTO
+            {
+                Id = t.id,
+                Number = t.number,
+                Seats = t.seats,
+                Status = t.status
+            }).ToList();
+        }
+        catch (Exception)
+        {
+            return new List<TableDTO>();
+        }
     }
 
     public TableDTO? GetTableById(int id)
     {
-        var table = _tableRepository.GetTable(id);
-        if (table == null) return null;
-
-        return new TableDTO
+        try
         {
-            Id = table.id,
-            Number = table.number,
-            Seats = table.seats,
-            Status = table.status
-        };
+            var table = _tableRepository.GetTable(id);
+            if (table == null) return null;
+
+            return new TableDTO
+            {
+                Id = table.id,
+                Number = table.number,
+                Seats = table.seats,
+                Status = table.status
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public ValidationResult CreateTable(CreateTableDTO createTableDto)
@@ -63,8 +77,15 @@ public class TableService : ITableService
             return ValidationResult.Failure("Table status is required.", nameof(createTableDto.Status));
         }
 
-        _tableRepository.CreateTable(number, createTableDto.Seats, createTableDto.Status);
-        return ValidationResult.Success();
+        try
+        {
+            _tableRepository.CreateTable(number, createTableDto.Seats, createTableDto.Status);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error creating table: {ex.Message}");
+        }
     }
 
     public ValidationResult UpdateTable(UpdateTableDTO updateTableDto)
@@ -84,16 +105,23 @@ public class TableService : ITableService
             return ValidationResult.Failure("Table status is required.", nameof(updateTableDto.Status));
         }
 
-        var table = new table
+        try
         {
-            id = updateTableDto.Id,
-            number = updateTableDto.Number,
-            seats = updateTableDto.Seats,
-            status = updateTableDto.Status
-        };
+            var table = new table
+            {
+                id = updateTableDto.Id,
+                number = updateTableDto.Number,
+                seats = updateTableDto.Seats,
+                status = updateTableDto.Status
+            };
 
-        _tableRepository.UpdateTable(table);
-        return ValidationResult.Success();
+            _tableRepository.UpdateTable(table);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error updating table: {ex.Message}");
+        }
     }
 
     public ValidationResult DeleteTable(int id)

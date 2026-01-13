@@ -15,30 +15,44 @@ public class ProductService : IProductService
 
     public List<ProductDTO> GetAllProducts()
     {
-        var products = _productRepository.GetProducts();
-        return products.Select(p => new ProductDTO
+        try
         {
-            id = p.id,
-            name = p.name,
-            description = p.description,
-            price = p.price,
-            category = p.category
-        }).ToList();
+            var products = _productRepository.GetProducts();
+            return products.Select(p => new ProductDTO
+            {
+                id = p.id,
+                name = p.name,
+                description = p.description,
+                price = p.price,
+                category = p.category
+            }).ToList();
+        }
+        catch (Exception)
+        {
+            return new List<ProductDTO>();
+        }
     }
 
     public ProductDTO? GetProductById(int id)
     {
-        var product = _productRepository.GetProduct(id);
-        if (product == null) return null;
-
-        return new ProductDTO
+        try
         {
-            id = product.id,
-            name = product.name,
-            description = product.description,
-            price = product.price,
-            category = product.category
-        };
+            var product = _productRepository.GetProduct(id);
+            if (product == null) return null;
+
+            return new ProductDTO
+            {
+                id = product.id,
+                name = product.name,
+                description = product.description,
+                price = product.price,
+                category = product.category
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public ValidationResult CreateProduct(CreateProductDTO createProductDto)
@@ -53,33 +67,54 @@ public class ProductService : IProductService
             return ValidationResult.Failure("Product price must be greater than 0.", nameof(createProductDto.price));
         }
 
-        _productRepository.CreateProduct(
-            createProductDto.name,
-            createProductDto.description,
-            createProductDto.price,
-            createProductDto.category
-        );
+        try
+        {
+            _productRepository.CreateProduct(
+                createProductDto.name,
+                createProductDto.description,
+                createProductDto.price,
+                createProductDto.category
+            );
 
-        return ValidationResult.Success();
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error creating product: {ex.Message}");
+        }
     }
 
     public void UpdateProduct(ProductDTO productDto)
     {
-        var product = new product
+        try
         {
-            id = productDto.id,
-            name = productDto.name,
-            description = productDto.description,
-            price = productDto.price,
-            category = productDto.category
-        };
+            var product = new product
+            {
+                id = productDto.id,
+                name = productDto.name,
+                description = productDto.description,
+                price = productDto.price,
+                category = productDto.category
+            };
 
-        _productRepository.UpdateProduct(product);
+            _productRepository.UpdateProduct(product);
+        }
+        catch (Exception)
+        {
+            // Silently fail to prevent application crash
+        }
     }
 
     public void DeleteProduct(int id)
     {
-        _productRepository.DeleteProduct(id);
+        try
+        {
+            _productRepository.DeleteProduct(id);
+        }
+        catch (Exception)
+        {
+            // Silently fail to prevent application crash
+        }
     }
 }
 

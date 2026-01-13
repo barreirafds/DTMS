@@ -25,15 +25,22 @@ public class AuthService : IAuthService
             return ValidationResult.Success();
         }
 
-        var users = _userRepository.GetUsers();
-        var user = users.FirstOrDefault(u => u.user1 == loginDto.Username && u.password == loginDto.Password);
-        
-        if (user != null)
+        try
         {
-            return ValidationResult.Success();
-        }
+            var users = _userRepository.GetUsers();
+            var user = users.FirstOrDefault(u => u.user1 == loginDto.Username && u.password == loginDto.Password);
+            
+            if (user != null)
+            {
+                return ValidationResult.Success();
+            }
 
-        return ValidationResult.Failure("Invalid Credentials");
+            return ValidationResult.Failure("Invalid Credentials");
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error validating credentials: {ex.Message}");
+        }
     }
 
     public ValidationResult RegisterUser(RegisterDTO registerDto)
@@ -51,14 +58,21 @@ public class AuthService : IAuthService
             return ValidationResult.Failure("Passwords do not match.", nameof(registerDto.ConfirmPassword));
         }
 
-        var users = _userRepository.GetUsers();
-        if (users.Any(u => u.user1 == registerDto.Username))
+        try
         {
-            return ValidationResult.Failure("Username already exists.", nameof(registerDto.Username));
-        }
+            var users = _userRepository.GetUsers();
+            if (users.Any(u => u.user1 == registerDto.Username))
+            {
+                return ValidationResult.Failure("Username already exists.", nameof(registerDto.Username));
+            }
 
-        _userRepository.CreateUser(registerDto.Username, registerDto.Password, registerDto.Role);
-        return ValidationResult.Success();
+            _userRepository.CreateUser(registerDto.Username, registerDto.Password, registerDto.Role);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error registering user: {ex.Message}");
+        }
     }
 }
 

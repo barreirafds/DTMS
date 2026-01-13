@@ -15,28 +15,42 @@ public class UserService : IUserService
 
     public List<UserDTO> GetAllUsers()
     {
-        var users = _userRepository.GetUsers();
-        return users.Select(u => new UserDTO
+        try
         {
-            Id = u.id,
-            Username = u.user1 ?? string.Empty,
-            Password = u.password,
-            Role = u.role ?? string.Empty
-        }).ToList();
+            var users = _userRepository.GetUsers();
+            return users.Select(u => new UserDTO
+            {
+                Id = u.id,
+                Username = u.user1 ?? string.Empty,
+                Password = u.password,
+                Role = u.role ?? string.Empty
+            }).ToList();
+        }
+        catch (Exception)
+        {
+            return new List<UserDTO>();
+        }
     }
 
     public UserDTO? GetUserById(int id)
     {
-        var user = _userRepository.GetUser(id);
-        if (user == null) return null;
-
-        return new UserDTO
+        try
         {
-            Id = user.id,
-            Username = user.user1 ?? string.Empty,
-            Password = user.password,
-            Role = user.role ?? string.Empty
-        };
+            var user = _userRepository.GetUser(id);
+            if (user == null) return null;
+
+            return new UserDTO
+            {
+                Id = user.id,
+                Username = user.user1 ?? string.Empty,
+                Password = user.password,
+                Role = user.role ?? string.Empty
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public ValidationResult CreateUser(CreateUserDTO createUserDto)
@@ -48,15 +62,21 @@ public class UserService : IUserService
             return ValidationResult.Failure("All fields are required.");
         }
 
-        
-        var users = _userRepository.GetUsers();
-        if (users.Any(u => u.user1 == createUserDto.Username))
+        try
         {
-            return ValidationResult.Failure("Username already exists.", nameof(createUserDto.Username));
-        }
+            var users = _userRepository.GetUsers();
+            if (users.Any(u => u.user1 == createUserDto.Username))
+            {
+                return ValidationResult.Failure("Username already exists.", nameof(createUserDto.Username));
+            }
 
-        _userRepository.CreateUser(createUserDto.Username, createUserDto.Password, createUserDto.Role);
-        return ValidationResult.Success();
+            _userRepository.CreateUser(createUserDto.Username, createUserDto.Password, createUserDto.Role);
+            return ValidationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            return ValidationResult.Failure($"Error creating user: {ex.Message}");
+        }
     }
 
     public void UpdateUser(UserDTO userDto)
@@ -66,15 +86,22 @@ public class UserService : IUserService
             return;
         }
 
-        var user = new user
+        try
         {
-            id = userDto.Id,
-            user1 = userDto.Username,
-            password = userDto.Password,
-            role = userDto.Role
-        };
+            var user = new user
+            {
+                id = userDto.Id,
+                user1 = userDto.Username,
+                password = userDto.Password,
+                role = userDto.Role
+            };
 
-        _userRepository.UpdateUser(user);
+            _userRepository.UpdateUser(user);
+        }
+        catch (Exception)
+        {
+            // Silently fail to prevent application crash
+        }
     }
 
     public void DeleteUser(int id)
@@ -84,7 +111,14 @@ public class UserService : IUserService
             return;
         }
 
-        _userRepository.DeleteUser(id);
+        try
+        {
+            _userRepository.DeleteUser(id);
+        }
+        catch (Exception)
+        {
+            // Silently fail to prevent application crash
+        }
     }
 }
 
