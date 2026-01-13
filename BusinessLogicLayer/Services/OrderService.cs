@@ -54,7 +54,16 @@ public class OrderService : IOrderService
             }
 
             // Verify product exists
-            var product = _productRepository.GetProduct(item.ProductId);
+
+            Models.product product = null;
+            try
+            {
+                product = _productRepository.GetProduct(item.ProductId);
+            }
+            catch (Exception ex)
+            {
+                return ValidationResult.Failure($"Error retrieving product with ID {item.ProductId}: {ex.Message}", nameof(item.ProductId));
+            }
             if (product == null)
             {
                 return ValidationResult.Failure($"Product with ID {item.ProductId} does not exist.", nameof(item.ProductId));

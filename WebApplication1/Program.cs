@@ -1,6 +1,7 @@
 using Auth0.AspNetCore.Authentication;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Services;
+using DataAcessLayer;
 using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;

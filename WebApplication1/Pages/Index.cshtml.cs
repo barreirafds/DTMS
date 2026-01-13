@@ -2,6 +2,7 @@ using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.DTOs;
 using BusinessLogicLayer.Services;
 using DataAcessLayer.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;

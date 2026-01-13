@@ -1,30 +1,22 @@
+using Auth0.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Authentication;
-using Auth0.AspNetCore.Authentication;
 
-namespace DTMS.Pages
+public class LogoutModel : PageModel
 {
-    public class LogoutModel : PageModel
+    public IActionResult OnGet()
     {
-        public async Task<IActionResult> OnGetAsync()
+        var props = new AuthenticationProperties
         {
-            try
-            {
-                var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                    .WithRedirectUri("/")
-                    .Build();
+            RedirectUri = "/"
+        };
 
-                await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-                return new EmptyResult();
-            }
-            catch (Exception ex)
-            {
-                // Log error if needed
-                TempData["ErrorMessage"] = $"An error occurred during logout: {ex.Message}";
-                return RedirectToPage("/");
-            }
-        }
+        return SignOut(
+            props,
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            Auth0Constants.AuthenticationScheme
+        );
     }
 }
-
