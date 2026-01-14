@@ -14,5 +14,10 @@ namespace DTMS.Mappers
                 Status = tableDTO.Status
             };
         }
+
+        public static List<ViewModels.TableVM> ToViewModelList(List<TableDTO> tableDTOs)
+        {
+            return tableDTOs.Select(ToViewModel).ToList();
+        }
     }
 }

@@ -3,6 +3,7 @@ using BusinessLogicLayer.DTOs;
 using BusinessLogicLayer.Services;
 using DataAcessLayer.Repositories;
 using DTMS.ViewModels;
+using DTMS.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -74,7 +75,7 @@ namespace DTMS.Pages
 
         public void OnGet()
         {
-            TablesList = _tableService.GetAllTables();
+            TablesList = TableVMMappers.ToViewModelList(_tableService.GetAllTables());
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
         }
