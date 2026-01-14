@@ -2,6 +2,7 @@ using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.DTOs;
 using BusinessLogicLayer.Services;
 using DataAcessLayer.Repositories;
+using DTMS.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -37,7 +38,7 @@ namespace DTMS.Pages
         [BindProperty]
         public string TableStatus { get; set; } = "Available";
 
-        public List<TableDTO> TablesList { get; private set; } = new();
+        public List<TableVM> TablesList { get; private set; } = new();
 
         // Users Properties
         [BindProperty]
@@ -138,14 +139,12 @@ namespace DTMS.Pages
 
         public IActionResult OnPostDeleteUser(int? id)
         {
-            if (id == null || id == 0)
-            {
-                return RedirectToPage();
-            }
+            if (id == null || id == 0) return RedirectToPage();
 
             _userService.DeleteUser(id.Value);
             return RedirectToPage();
         }
+
 
         // Products CRUD 
         public IActionResult OnPostCreateProduct()
