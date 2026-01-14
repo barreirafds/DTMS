@@ -35,8 +35,23 @@ namespace DTMS.Pages
 
         public void OnGet()
         {
-            ShowTableEmployee = _tableRepository.GetTables();
-            Products = _productService.GetAllProducts();
+            try
+            {
+                ShowTableEmployee = _tableRepository.GetTables();
+            }
+            catch (Exception)
+            {
+                ShowTableEmployee = new List<table>();
+            }
+
+            try
+            {
+                Products = _productService.GetAllProducts();
+            }
+            catch (Exception)
+            {
+                Products = new List<ProductDTO>();
+            }
         }
 
         public IActionResult OnGetTableOrders(int tableId)
@@ -85,35 +100,43 @@ namespace DTMS.Pages
         // Helper method to get or create user from Auth0 claims
         private int GetOrCreateUserIdFromAuth0()
         {
-            // Try to get the user identifier from Auth0 claims
-            // Auth0 uses "sub" claim for user ID, or we can use email/name
-            var subClaim = User.FindFirst("sub")?.Value;
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-            var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
-            
-            // Use email if available, otherwise use name, otherwise use sub
-            var username = emailClaim ?? nameClaim ?? subClaim ?? "auth0_user";
-            
-            // Try to find existing user by username
-            var existingUser = _userRepository.GetUserByUsername(username);
-            if (existingUser?.id != null && existingUser.id > 0)
+            try
             {
-                return existingUser.id.Value;
+                // Try to get the user identifier from Auth0 claims
+                // Auth0 uses "sub" claim for user ID, or we can use email/name
+                var subClaim = User.FindFirst("sub")?.Value;
+                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+                
+                // Use email if available, otherwise use name, otherwise use sub
+                var username = emailClaim ?? nameClaim ?? subClaim ?? "auth0_user";
+                
+                // Try to find existing user by username
+                var existingUser = _userRepository.GetUserByUsername(username);
+                if (existingUser?.id != null && existingUser.id > 0)
+                {
+                    return existingUser.id.Value;
+                }
+                
+                // Create a new user if not found (with default role)
+                var defaultRole = "Employee"; // Default role for Auth0 users
+                _userRepository.CreateUser(username, "", defaultRole); // Empty password for Auth0 users
+                
+                // Get the newly created user
+                var newUser = _userRepository.GetUserByUsername(username);
+                if (newUser?.id != null && newUser.id > 0)
+                {
+                    return newUser.id.Value;
+                }
+                
+                // Fallback: return 1 if something goes wrong (you may want to handle this differently)
+                return 1;
             }
-            
-            // Create a new user if not found (with default role)
-            var defaultRole = "Employee"; // Default role for Auth0 users
-            _userRepository.CreateUser(username, "", defaultRole); // Empty password for Auth0 users
-            
-            // Get the newly created user
-            var newUser = _userRepository.GetUserByUsername(username);
-            if (newUser?.id != null && newUser.id > 0)
+            catch (Exception)
             {
-                return newUser.id.Value;
+                // Fallback: return 1 if database connection fails
+                return 1;
             }
-            
-            // Fallback: return 1 if something goes wrong (you may want to handle this differently)
-            return 1;
         }
 
         // Order endpoint - Save order to database
