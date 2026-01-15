@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // Determine the current page to use the correct endpoint
             const currentPath = window.location.pathname;
-            const handlerPath = currentPath.includes('/Privacy') ? '/Privacy?handler=SaveOrder' : '/Index?handler=SaveOrder';
+            const handlerPath = currentPath.includes('/Dashboard') ? '/Dashboard?handler=SaveOrder' : '/Index?handler=SaveOrder';
 
             console.log('Sending to:', handlerPath);
 

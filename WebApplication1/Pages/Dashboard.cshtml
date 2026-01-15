@@ -1,5 +1,5 @@
-﻿@page
-@model PrivacyModel
+@page
+@model DashboardModel
 @{
     ViewData["Title"] = "Dashboard";
 }
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Load existing pending order for this table
         try {
-            const response = await fetch(`/Privacy?handler=TableOrders&tableId=${currentTableId}`);
+            const response = await fetch(`/Dashboard?handler=TableOrders&tableId=${currentTableId}`);
             if (response.ok) {
                 const data = await response.json();
                 

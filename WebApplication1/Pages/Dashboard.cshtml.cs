@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BusinessLogicLayer.Abstractions;
 using BusinessLogicLayer.Models;
@@ -7,9 +7,9 @@ using System.Security.Claims;
 
 namespace DTMS.Pages
 {
-    public class PrivacyModel : PageModel
+    public class DashboardModel : PageModel
     {
-        private readonly ILogger<PrivacyModel> _logger;
+        private readonly ILogger<DashboardModel> _logger;
         private readonly ITableRepository _tableRepository;
         private readonly IProductService _productService;
         private readonly IOrderService _orderService;
@@ -24,7 +24,7 @@ namespace DTMS.Pages
         [BindProperty]
         public List<OrderItemInput> OrderItems { get; set; } = new();
 
-        public PrivacyModel(ILogger<PrivacyModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService, IUserRepository userRepository)
+        public DashboardModel(ILogger<DashboardModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService, IUserRepository userRepository)
         {
             _logger = logger;
             _tableRepository = tableRepository;
@@ -232,3 +232,4 @@ namespace DTMS.Pages
         public decimal Price { get; set; }
     }
 }
+
