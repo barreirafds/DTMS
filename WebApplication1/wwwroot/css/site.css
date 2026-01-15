@@ -50,23 +50,14 @@ body {
   font-size: 1.25rem;
   display: flex;
   align-items: center;
-  transition: all 0.3s ease;
   padding: 0.5rem 0;
 }
 
-.custom-navbar .navbar-brand:hover {
-  color: var(--accent-terracotta) !important;
-  transform: translateX(2px);
-}
+/* Removed hover effect for navbar-brand (Restaurant Manager) */
 
 .custom-navbar .navbar-brand i {
   font-size: 1.5rem;
   color: var(--accent-terracotta);
-  transition: transform 0.3s ease;
-}
-
-.custom-navbar .navbar-brand:hover i {
-  transform: rotate(15deg);
 }
 
 .custom-navbar .nav-link {

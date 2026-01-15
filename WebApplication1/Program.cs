@@ -5,6 +5,7 @@ using DataAcessLayer;
 using DataAcessLayer.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 Console.WriteLine("Base path: " + Directory.GetCurrentDirectory());
 
@@ -71,7 +72,80 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthentication();
+
+// Middleware to add role claim from database after Auth0 authentication
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        // Check if role claim already exists
+        if (!context.User.HasClaim(c => c.Type == ClaimTypes.Role))
+        {
+            try
+            {
+                // Get user repository from service provider
+                var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
+                
+                // Get username from Auth0 claims (try multiple sources)
+                var emailClaim = context.User.FindFirst(ClaimTypes.Email)?.Value;
+                var nameClaim = context.User.FindFirst(ClaimTypes.Name)?.Value ?? context.User.FindFirst("name")?.Value;
+                var subClaim = context.User.FindFirst("sub")?.Value;
+                
+                var username = emailClaim ?? nameClaim ?? subClaim;
+                
+                if (!string.IsNullOrEmpty(username))
+                {
+                    // Get user from database
+                    var user = userRepository.GetUserByUsername(username);
+                    
+                    if (user != null && !string.IsNullOrEmpty(user.role))
+                    {
+                        // Get the existing identity
+                        var existingIdentity = context.User.Identity as ClaimsIdentity;
+                        
+                        if (existingIdentity != null)
+                        {
+                            // Add role claim to existing identity
+                            existingIdentity.AddClaim(new Claim(ClaimTypes.Role, user.role));
+                        }
+                        else
+                        {
+                            // Create new identity if existing one is not ClaimsIdentity
+                            var newIdentity = new ClaimsIdentity(
+                                context.User.Identity.AuthenticationType,
+                                ClaimTypes.Name,
+                                ClaimTypes.Role);
+                            
+                            // Copy all existing claims
+                            foreach (var claim in context.User.Claims)
+                            {
+                                newIdentity.AddClaim(claim);
+                            }
+                            
+                            // Add role claim
+                            newIdentity.AddClaim(new Claim(ClaimTypes.Role, user.role));
+                            
+                            // Replace the user principal
+                            context.User = new ClaimsPrincipal(newIdentity);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't break the request
+                Console.WriteLine($"Error adding role claim: {ex.Message}");
+            }
+        }
+    }
+    
+    await next();
+});
+
 app.UseAuthorization();
+
+// Configure default route to redirect to Dashboard
+app.MapGet("/", () => Results.Redirect("/Dashboard"));
 
 app.MapRazorPages();
 
