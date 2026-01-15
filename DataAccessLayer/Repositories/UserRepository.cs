@@ -115,7 +115,7 @@ public class UserRepository : IUserRepository
         using var conn = new SqlConnection(connString);
         conn.Open();
 
-        const string query = "DELETE FROM [user] WHERE `id`=@id;";
+        const string query = "DELETE FROM [user] WHERE [id]=@id;";
         using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();

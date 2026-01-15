@@ -68,16 +68,25 @@ namespace DTMS.Pages
 
         public List<ProductDTO> ProductsList { get; private set; } = new();
 
+        [BindProperty]
+        public string? ActiveTab { get; set; } = "tables";
+
         public string GetStatusBadgeStyle(string? status)
         {
             return _tableService.GetStatusBadgeStyle(status ?? string.Empty);
         }
 
-        public void OnGet()
+        public void OnGet(string? tab = null)
         {
             TablesList = TableVMMappers.ToViewModelList(_tableService.GetAllTables());
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
+            ViewData["ActiveTab"] = tab ?? "tables";
+        }
+
+        private IActionResult RedirectToPageWithTab(string tab)
+        {
+            return RedirectToPage(new { tab = tab });
         }
 
         public IActionResult OnPost()
@@ -94,26 +103,26 @@ namespace DTMS.Pages
             if (!result.IsValid)
             {
                 ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
-                OnGet();
+                OnGet(ActiveTab ?? "tables");
                 return Page();
             }
 
-            return RedirectToPage();
+            return RedirectToPageWithTab(ActiveTab ?? "tables");
         }
 
-        public IActionResult OnPostDelete(int id)
+        public IActionResult OnPostDelete(int id, string? tab = null)
         {
             var result = _tableService.DeleteTable(id);
             
             if (!result.IsValid)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "Error deleting table.";
-                OnGet();
+                OnGet(tab ?? "tables");
                 return Page();
             }
 
             TempData["SuccessMessage"] = "Table deleted successfully!";
-            return RedirectToPage();
+            return RedirectToPageWithTab(tab ?? "tables");
         }
 
         // Users CRUD
@@ -131,19 +140,33 @@ namespace DTMS.Pages
             if (!result.IsValid)
             {
                 ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
-                OnGet();
+                OnGet(ActiveTab ?? "users");
                 return Page();
             }
 
-            return RedirectToPage();
+            return RedirectToPageWithTab(ActiveTab ?? "users");
         }
 
-        public IActionResult OnPostDeleteUser(int? id)
+        public IActionResult OnPostDeleteUser(int id, string? tab = null)
         {
-            if (id == null || id == 0) return RedirectToPage();
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Invalid user ID.";
+                OnGet(tab ?? "users");
+                return Page();
+            }
 
-            _userService.DeleteUser(id.Value);
-            return RedirectToPage();
+            try
+            {
+                _userService.DeleteUser(id);
+                TempData["SuccessMessage"] = "User deleted successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting user: {ex.Message}";
+            }
+
+            return RedirectToPageWithTab(tab ?? "users");
         }
 
 
@@ -163,17 +186,26 @@ namespace DTMS.Pages
             if (!result.IsValid)
             {
                 ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
-                OnGet();
+                OnGet(ActiveTab ?? "products");
                 return Page();
             }
 
-            return RedirectToPage();
+            return RedirectToPageWithTab(ActiveTab ?? "products");
         }
 
-        public IActionResult OnPostDeleteProduct(int id)
+        public IActionResult OnPostDeleteProduct(int id, string? tab = null)
         {
-            _productService.DeleteProduct(id);
-            return RedirectToPage();
+            try
+            {
+                _productService.DeleteProduct(id);
+                TempData["SuccessMessage"] = "Product deleted successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting product: {ex.Message}";
+            }
+
+            return RedirectToPageWithTab(tab ?? "products");
         }
 
         // Helper method to get or create user from Auth0 claims
