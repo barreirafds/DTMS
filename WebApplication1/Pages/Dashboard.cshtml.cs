@@ -1,235 +1,375 @@
+using BusinessLogicLayer.Abstractions;
+using BusinessLogicLayer.DTOs;
+using BusinessLogicLayer.Services;
+using DataAcessLayer.Repositories;
+using DTMS.ViewModels;
+using DTMS.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using BusinessLogicLayer.Abstractions;
-using BusinessLogicLayer.Models;
-using BusinessLogicLayer.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace DTMS.Pages
 {
-    public class DashboardModel : PageModel
+    public class IndexModel : PageModel
     {
-        private readonly ILogger<DashboardModel> _logger;
-        private readonly ITableRepository _tableRepository;
+        private readonly ITableService _tableService;
+        private readonly IUserService _userService;
         private readonly IProductService _productService;
         private readonly IOrderService _orderService;
         private readonly IUserRepository _userRepository;
 
-        public List<table> ShowTableEmployee { get; private set; } = new();
-        public List<ProductDTO> Products { get; private set; } = new();
-
-        [BindProperty]
-        public int OrderTableId { get; set; }
-
-        [BindProperty]
-        public List<OrderItemInput> OrderItems { get; set; } = new();
-
-        public DashboardModel(ILogger<DashboardModel> logger, ITableRepository tableRepository, IProductService productService, IOrderService orderService, IUserRepository userRepository)
+        public IndexModel(ITableService tableService, IUserService userService, IProductService productService, IOrderService orderService, IUserRepository userRepository)
         {
-            _logger = logger;
-            _tableRepository = tableRepository;
+            _tableService = tableService;
+            _userService = userService;
             _productService = productService;
             _orderService = orderService;
             _userRepository = userRepository;
         }
 
-        public void OnGet()
+        [BindProperty, Required(ErrorMessage = "Number of the table is required")]
+        public string TableNumber { get; set; } = string.Empty;
+
+        [BindProperty]
+        public int TableSeats { get; set; }
+
+        [BindProperty]
+        public string TableStatus { get; set; } = "Available";
+
+        public List<TableVM> TablesList { get; private set; } = new();
+
+        // Users Properties
+        [BindProperty]
+        public string UserName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string Password { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string UserRole { get; set; } = string.Empty;
+
+        public List<UserDTO> UsersList { get; private set; } = new();
+
+        // Products Properties
+        [BindProperty]
+        public string ProductName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string? ProductDescription { get; set; }
+
+        [BindProperty]
+        public decimal ProductPrice { get; set; }
+
+        [BindProperty]
+        public string ProductCategory { get; set; } = string.Empty;
+
+        public List<ProductDTO> ProductsList { get; private set; } = new();
+
+        [BindProperty]
+        public string? ActiveTab { get; set; } = "tables";
+
+        public string GetStatusBadgeStyle(string? status)
+        {
+            return _tableService.GetStatusBadgeStyle(status ?? string.Empty);
+        }
+
+        private bool HasAccess()
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return false;
+            }
+
+            // Check for Manager role from Auth0 claims
+            if (User.IsInRole("Manager"))
+            {
+                return true;
+            }
+
+            if (User.HasClaim(ClaimTypes.Role, "Manager"))
+            {
+                return true;
+            }
+
+            if (User.Claims.Any(c => (c.Type == ClaimTypes.Role || c.Type == "role") && c.Value == "Manager"))
+            {
+                return true;
+            }
+
+            // Check database for Manager or Admin role
+            try
+            {
+                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+                var subClaim = User.FindFirst("sub")?.Value;
+                var username = emailClaim ?? nameClaim ?? subClaim;
+
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var dbUser = _userRepository.GetUserByUsername(username);
+                    if (dbUser != null && !string.IsNullOrEmpty(dbUser.role))
+                    {
+                        return dbUser.role == "Manager" || dbUser.role == "Admin";
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors
+            }
+
+            return false;
+        }
+
+        public IActionResult OnGet(string? tab = null)
+        {
+            // Check if user has access (Manager from Auth0 or Admin/Manager from DB)
+            if (!HasAccess())
+            {
+                TempData["ErrorMessage"] = "You do not have permission to access this page.";
+                return RedirectToPage("/Index");
+            }
+
+            TablesList = TableVMMappers.ToViewModelList(_tableService.GetAllTables());
+            UsersList = _userService.GetAllUsers();
+            ProductsList = _productService.GetAllProducts();
+            ViewData["ActiveTab"] = tab ?? "tables";
+            return Page();
+        }
+
+        private IActionResult RedirectToPageWithTab(string tab)
+        {
+            return RedirectToPage(new { tab = tab });
+        }
+
+        public IActionResult OnPost()
+        {
+            var createTableDto = new CreateTableDTO
+            {
+                TableNumber = TableNumber,
+                Seats = TableSeats,
+                Status = TableStatus
+            };
+
+            var result = _tableService.CreateTable(createTableDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet(ActiveTab ?? "tables");
+                return Page();
+            }
+
+            return RedirectToPageWithTab(ActiveTab ?? "tables");
+        }
+
+        public IActionResult OnPostDelete(int id, string? tab = null)
+        {
+            var result = _tableService.DeleteTable(id);
+            
+            if (!result.IsValid)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Error deleting table.";
+                OnGet(tab ?? "tables");
+                return Page();
+            }
+
+            TempData["SuccessMessage"] = "Table deleted successfully!";
+            return RedirectToPageWithTab(tab ?? "tables");
+        }
+
+        // Users CRUD
+        public IActionResult OnPostCreateUser()
+        {
+            var createUserDto = new CreateUserDTO
+            {
+                Username = UserName,
+                Password = Password,
+                Role = UserRole
+            };
+
+            var result = _userService.CreateUser(createUserDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet(ActiveTab ?? "users");
+                return Page();
+            }
+
+            return RedirectToPageWithTab(ActiveTab ?? "users");
+        }
+
+        public IActionResult OnPostDeleteUser(int id, string? tab = null)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Invalid user ID.";
+                OnGet(tab ?? "users");
+                return Page();
+            }
+
+            try
+            {
+                _userService.DeleteUser(id);
+                TempData["SuccessMessage"] = "User deleted successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting user: {ex.Message}";
+            }
+
+            return RedirectToPageWithTab(tab ?? "users");
+        }
+
+
+        // Products CRUD 
+        public IActionResult OnPostCreateProduct()
+        {
+            var createProductDto = new CreateProductDTO
+            {
+                name = ProductName,
+                description = ProductDescription,
+                price = ProductPrice,
+                category = ProductCategory
+            };
+
+            var result = _productService.CreateProduct(createProductDto);
+            
+            if (!result.IsValid)
+            {
+                ModelState.AddModelError(result.FieldName ?? "", result.ErrorMessage ?? "");
+                OnGet(ActiveTab ?? "products");
+                return Page();
+            }
+
+            return RedirectToPageWithTab(ActiveTab ?? "products");
+        }
+
+        public IActionResult OnPostDeleteProduct(int id, string? tab = null)
         {
             try
             {
-                ShowTableEmployee = _tableRepository.GetTables();
+                _productService.DeleteProduct(id);
+                TempData["SuccessMessage"] = "Product deleted successfully!";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ShowTableEmployee = new List<table>();
-            }
-
-            try
-            {
-                Products = _productService.GetAllProducts();
-            }
-            catch (Exception)
-            {
-                Products = new List<ProductDTO>();
-            }
-        }
-
-        public IActionResult OnGetTableOrders(int tableId)
-        {
-            // Get only the pending order for this table (most recent)
-            var pendingOrder = _orderService.GetPendingOrderByTableId(tableId);
-            
-            if (pendingOrder == null)
-            {
-                return new JsonResult(new { hasPendingOrder = false, items = new List<object>() });
+                TempData["ErrorMessage"] = $"Error deleting product: {ex.Message}";
             }
 
-            var items = pendingOrder.Items.Select(item => new
-            {
-                productId = item.ProductId,
-                productName = item.ProductName,
-                quantity = item.Quantity,
-                price = item.Price
-            }).ToList();
-
-            return new JsonResult(new 
-            { 
-                hasPendingOrder = true,
-                orderId = pendingOrder.Id,
-                items = items 
-            });
-        }
-
-        public string showtables()
-        {
-            // This method seems unused, but kept for compatibility
-            return "Connection string is managed by repository";
-        }
-
-        // Function to get  the badge (color bg) of the status
-        public string GetStatusBadgeClass(string? status)
-        {
-            var s = (status ?? "Available").ToLowerInvariant();
-            
-            if (s == "available") return "bg-success";
-            else if (s == "occupied") return "bg-danger";
-            else if (s == "reserved") return "bg-warning";
-            else return "bg-secondary";
+            return RedirectToPageWithTab(tab ?? "products");
         }
 
         // Helper method to get or create user from Auth0 claims
         private int GetOrCreateUserIdFromAuth0()
         {
+            // Try to get the user identifier from Auth0 claims
+            // Auth0 uses "sub" claim for user ID, or we can use email/name
+            var subClaim = User.FindFirst("sub")?.Value;
+            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+            var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+            
+            // Use email if available, otherwise use name, otherwise use sub
+            var username = emailClaim ?? nameClaim ?? subClaim ?? "auth0_user";
+            
+            // Try to find existing user by username
+            var existingUser = _userRepository.GetUserByUsername(username);
+            if (existingUser?.id != null && existingUser.id > 0)
+            {
+                return existingUser.id.Value;
+            }
+            
+            // Create a new user if not found (with default role)
+            var defaultRole = "Employee"; // Default role for Auth0 users
+            _userRepository.CreateUser(username, "", defaultRole); // Empty password for Auth0 users
+            
+            // Get the newly created user
+            var newUser = _userRepository.GetUserByUsername(username);
+            if (newUser?.id != null && newUser.id > 0)
+            {
+                return newUser.id.Value;
+            }
+            
+            // Fallback: return 1 if something goes wrong (you may want to handle this differently)
+            return 1;
+        }
+
+        // Order endpoint - Refactored and robust
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> OnPostSaveOrder()
+        {
             try
             {
-                // Try to get the user identifier from Auth0 claims
-                // Auth0 uses "sub" claim for user ID, or we can use email/name
-                var subClaim = User.FindFirst("sub")?.Value;
-                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+                // Read request body
+                Request.EnableBuffering();
+                Request.Body.Position = 0;
                 
-                // Use email if available, otherwise use name, otherwise use sub
-                var username = emailClaim ?? nameClaim ?? subClaim ?? "auth0_user";
-                
-                // Try to find existing user by username
-                var existingUser = _userRepository.GetUserByUsername(username);
-                if (existingUser?.id != null && existingUser.id > 0)
+                string body;
+                using (var reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8, leaveOpen: true))
                 {
-                    return existingUser.id.Value;
+                    body = await reader.ReadToEndAsync();
                 }
-                
-                // Create a new user if not found (with default role)
-                var defaultRole = "Employee"; // Default role for Auth0 users
-                _userRepository.CreateUser(username, "", defaultRole); // Empty password for Auth0 users
-                
-                // Get the newly created user
-                var newUser = _userRepository.GetUserByUsername(username);
-                if (newUser?.id != null && newUser.id > 0)
+                Request.Body.Position = 0;
+
+                if (string.IsNullOrWhiteSpace(body))
                 {
-                    return newUser.id.Value;
+                    return new JsonResult(new { success = false, message = "Order data is required." }) { StatusCode = 400 };
                 }
-                
-                // Fallback: return 1 if something goes wrong (you may want to handle this differently)
-                return 1;
-            }
-            catch (Exception)
-            {
-                // Fallback: return 1 if database connection fails
-                return 1;
-            }
-        }
 
-        // Order endpoint - Save order to database
-        public IActionResult OnPostSaveOrder()
-        {
-            // Check if user is authenticated
-            if (!User.Identity?.IsAuthenticated ?? true)
-            {
-                TempData["ErrorMessage"] = "User not authenticated. Please log in again.";
-                OnGet();
-                return RedirectToPage();
-            }
-
-            // Get or create user ID from Auth0 claims
-            var userId = GetOrCreateUserIdFromAuth0();
-            if (userId <= 0)
-            {
-                TempData["ErrorMessage"] = "Unable to determine user. Please log in again.";
-                OnGet();
-                return RedirectToPage();
-            }
-
-            // Validate order data
-            if (OrderTableId <= 0)
-            {
-                TempData["ErrorMessage"] = "Table ID is required.";
-                OnGet();
-                return RedirectToPage();
-            }
-
-            if (OrderItems == null || OrderItems.Count == 0)
-            {
-                TempData["ErrorMessage"] = "Order must contain at least one item.";
-                OnGet();
-                return RedirectToPage();
-            }
-
-            // Create DTO from form data
-            var createOrderDto = new CreateOrderDTO
-            {
-                TableId = OrderTableId,
-                UserId = userId,
-                Items = OrderItems.Select(item => new CreateOrderItemDTO
+                // Deserialize JSON
+                CreateOrderDTO? createOrderDto;
+                try
                 {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Price = item.Price
-                }).ToList()
-            };
+                    createOrderDto = JsonSerializer.Deserialize<CreateOrderDTO>(body, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+                }
+                catch (JsonException ex)
+                {
+                    return new JsonResult(new { success = false, message = $"Invalid JSON format: {ex.Message}" }) { StatusCode = 400 };
+                }
 
-            // Validate and save order
-            var result = _orderService.CreateOrder(createOrderDto);
+                if (createOrderDto == null)
+                {
+                    return new JsonResult(new { success = false, message = "Invalid order data." }) { StatusCode = 400 };
+                }
 
-            if (!result.IsValid)
-            {
-                TempData["ErrorMessage"] = result.ErrorMessage ?? "Error creating order.";
-                OnGet();
-                return RedirectToPage();
+                // Check if user is authenticated
+                if (!User.Identity?.IsAuthenticated ?? true)
+                {
+                    return new JsonResult(new { success = false, message = "User not authenticated." }) { StatusCode = 401 };
+                }
+
+                // Get or create user ID from Auth0 claims
+                var userId = GetOrCreateUserIdFromAuth0();
+                if (userId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "Unable to determine user. Please log in again." }) { StatusCode = 401 };
+                }
+
+                // Set user ID
+                createOrderDto.UserId = userId;
+
+                // Validate and save order
+                var result = _orderService.CreateOrder(createOrderDto);
+
+                if (!result.IsValid)
+                {
+                    return new JsonResult(new { success = false, message = result.ErrorMessage ?? "Error creating order." }) { StatusCode = 400 };
+                }
+
+                return new JsonResult(new { success = true, message = "Order saved successfully!" });
             }
-
-            TempData["SuccessMessage"] = $"Order saved successfully for Table #{OrderTableId}!";
-            return RedirectToPage();
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = $"Error: {ex.Message}" }) { StatusCode = 500 };
+            }
         }
-
-        // Pay order endpoint - Update order status to Paid
-        public IActionResult OnPostPayOrder(int orderId)
-        {
-            if (orderId <= 0)
-            {
-                ModelState.AddModelError("", "Invalid order ID.");
-                OnGet();
-                return Page();
-            }
-
-            var result = _orderService.UpdateOrderStatus(orderId, "Paid");
-
-            if (!result.IsValid)
-            {
-                ModelState.AddModelError("", result.ErrorMessage ?? "Error updating order status.");
-                OnGet();
-                return Page();
-            }
-
-            return RedirectToPage();
-        }
-    }
-
-    // Helper class for form binding
-    public class OrderItemInput
-    {
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
     }
 }
-

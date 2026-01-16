@@ -72,72 +72,10 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthentication();
-
-// Middleware to add role claim from database after Auth0 authentication
-app.Use(async (context, next) =>
-{
-    if (context.User.Identity?.IsAuthenticated == true)
-    {
-        try
-        {
-            // Get user repository from service provider
-            var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
-            
-            // Get username from Auth0 claims (try multiple sources)
-            var emailClaim = context.User.FindFirst(ClaimTypes.Email)?.Value;
-            var nameClaim = context.User.FindFirst(ClaimTypes.Name)?.Value ?? context.User.FindFirst("name")?.Value;
-            var subClaim = context.User.FindFirst("sub")?.Value;
-            
-            var username = emailClaim ?? nameClaim ?? subClaim;
-            
-            if (!string.IsNullOrEmpty(username))
-            {
-                // Get user from database
-                var user = userRepository.GetUserByUsername(username);
-                
-                if (user != null && !string.IsNullOrEmpty(user.role))
-                {
-                    // Check if database role is already in claims
-                    var hasDbRole = context.User.HasClaim(ClaimTypes.Role, user.role);
-                    
-                    // Always add/update database role to ensure it's available
-                    if (!hasDbRole)
-                    {
-                        // Create new identity copying all existing claims
-                        var identity = new ClaimsIdentity(
-                            context.User.Identity.AuthenticationType,
-                            context.User.Identity.NameClaimType,
-                            context.User.Identity.RoleClaimType);
-                        
-                        // Copy all existing claims
-                        foreach (var claim in context.User.Claims)
-                        {
-                            identity.AddClaim(claim);
-                        }
-                        
-                        // Add role claim from database
-                        identity.AddClaim(new Claim(ClaimTypes.Role, user.role));
-                        
-                        // Replace the user principal
-                        context.User = new ClaimsPrincipal(identity);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log error but don't break the request
-            Console.WriteLine($"Error adding role claim: {ex.Message}");
-        }
-    }
-    
-    await next();
-});
-
 app.UseAuthorization();
 
-// Configure default route to redirect to Dashboard
-app.MapGet("/", () => Results.Redirect("/Dashboard"));
+// Configure default route to redirect to Index (Dashboard page)
+app.MapGet("/", () => Results.Redirect("/Index"));
 
 app.MapRazorPages();
 

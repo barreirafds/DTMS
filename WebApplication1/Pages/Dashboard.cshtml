@@ -1,446 +1,413 @@
 @page
-@model DashboardModel
+@model IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<br/>
-<h1 class="mb-4">@ViewData["Title"]</h1>
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="admin-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-speedometer2"></i> Admin Dashboard
+        </h1>
     </div>
-}
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <h6><i class="bi bi-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
-        <ul class="mb-0">
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <li>@error.ErrorMessage</li>
-            }
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-@if (Model.ShowTableEmployee.Any())
-{
-    <!-- Grid of the square -->
-    <div class="row g-3">
-        @foreach (var table in Model.ShowTableEmployee)
-        {
-            <!-- square box -->
-            <div class="col-md-3 col-sm-4 col-6">
-                <div class="table-card card h-100 shadow-sm" 
-                     data-bs-toggle="modal" 
-                     data-bs-target="#tableModal" 
-                     data-table-id="@table.id"
-                     data-table-number="@table.number"
-                     data-table-seats="@table.seats"
-                     data-table-status="@table.status">
-                    <div class="card-body text-center">
-                        <h3 class="mb-2">Table #@table.number</h3>
-                        <span class="badge @(Model.GetStatusBadgeClass(table.status))">
-                            @(table.status ?? "Available")
-                        </span>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-}
-else
-{
-    <div class="alert alert-info">
-        No tables available.
-    </div>
-}
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tables-tab" data-bs-toggle="tab" data-bs-target="#tables" type="button" role="tab">
+                <i class="bi bi-table"></i> Tables
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                <i class="bi bi-people"></i> Users
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
+                <i class="bi bi-box-seam"></i> Products
+            </button>
+        </li>
+    </ul>
 
+    <!-- Tab Content -->
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Tables Tab -->
+        <div class="tab-pane fade" id="tables" role="tabpanel">
+            <div class="row">
+                <!-- Create Table Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Table</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ActiveTab" value="tables" />
+                                
+                                <div class="mb-3">
+                                    <label for="TableNumber" class="form-label">Table Number</label>
+                                    <input type="text" class="form-control" id="TableNumber" name="TableNumber" 
+                                           value="@Model.TableNumber" placeholder="Ex: 5" required>
+                                    <span asp-validation-for="TableNumber" class="text-danger"></span>
+                                </div>
 
-<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <!-- Header do Modal -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <!-- Table Information -->
-                <div class="mb-3">
-                    <p><strong>Table #<span id="modalTableNumber">-</span></strong> | 
-                       Seats: <span id="modalTableSeats">-</span> | 
-                       Status: <span id="modalTableStatus" class="badge">-</span></p>
-                </div>
+                                <div class="mb-3">
+                                    <label for="TableSeats" class="form-label">Number of Seats</label>
+                                    <input type="number" class="form-control" id="TableSeats" name="TableSeats" 
+                                           value="@Model.TableSeats" placeholder="Ex: 4" min="1" required>
+                                </div>
 
-                <hr>
+                                <div class="mb-3">
+                                    <label for="TableStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="TableStatus" name="TableStatus">
+                                        <option value="Available">Available</option>
+                                        <option value="Occupied">Occupied</option>
+                                        <option value="Reserved">Reserved</option>
+                                        <option value="OutOfService">Out of Service</option>
+                                    </select>
+                                </div>
 
-                <!-- Add Product Section -->
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Add Product to Order</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Select Product</label>
-                                <select class="form-select" id="productSelect">
-                                    <option value="">Select a product</option>
-                                    @foreach (var product in Model.Products)
-                                    {
-                                        <option value="@product.id" 
-                                                data-price="@product.price.ToString("F2")" 
-                                                data-name="@product.name">
-                                            @product.name - @product.price.ToString("F2")€ (@product.category)
-                                        </option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="productQuantity" 
-                                       min="1" value="1" placeholder="Qty">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-primary w-100" id="addProductBtn">
-                                    <i class="bi bi-plus-circle"></i> Add
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle"></i> Create Table
                                 </button>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
-                <!-- Order Items (Cart) -->
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0"><i class="bi bi-cart"></i> Order Items</h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="orderItemsContainer">
-                            <div id="orderItemsList" class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Subtotal</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="orderItemsTableBody">
-                                        <tr id="emptyCartMessage">
-                                            <td colspan="5" class="text-center text-muted">
-                                                <i class="bi bi-cart-x"></i> No items added yet. Select a product and add it to the order.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th colspan="3" class="text-end">Total:</th>
-                                            <th id="orderTotal" class="text-primary">0.00€</th>
-                                            <th></th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
+                <!-- Tables List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Tables</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.TablesList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Table #</th>
+                                                <th>Seats</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var table in Model.TablesList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@table.Number</strong></td>
+                                                    <td>@table.Seats</td>
+                                                    <td>
+                                                        <span class="badge" style="@Model.GetStatusBadgeStyle(table.Status)">
+                                                            @(table.Status ?? "Available")
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a asp-page="/EditTable" asp-route-id="@table.Id" 
+                                                           class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form method="post" asp-page-handler="Delete" asp-route-id="@table.Id" asp-route-tab="tables"
+                                                              class="inline-form" onsubmit="return confirm('Are you sure you want to delete this table?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No tables created yet.
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form method="post" asp-page-handler="PayOrder" id="payOrderForm" style="display: none;">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="payOrderId" name="orderId" value="" />
-                    <button type="submit" class="btn btn-warning" id="payOrderBtn">
-                        <i class="bi bi-cash-coin"></i> Pay Order
-                    </button>
-                </form>
-                <form method="post" asp-page-handler="SaveOrder" id="saveOrderForm">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="orderTableId" name="OrderTableId" value="" />
-                    <div id="orderItemsHiddenInputs"></div>
-                    <button type="submit" class="btn btn-success" id="saveOrderBtn" disabled>
-                        <i class="bi bi-save"></i> Save Order
-                    </button>
-                </form>
+        <!-- Users Tab -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="row">
+                <!-- Create User Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-person-plus"></i> Create New User</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="CreateUser">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ActiveTab" value="users" />
+                                
+                                <div class="mb-3">
+                                    <label for="UserName" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="UserName" name="UserName" 
+                                           value="@Model.UserName" placeholder="Enter username" required>
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="Password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="Password" name="Password" 
+                                           value="@Model.Password" placeholder="Enter password" required>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="UserRole" class="form-label">Role</label>
+                                    <select class="form-select" id="UserRole" name="UserRole" required>
+                                        <option value="">Select a role</option>
+                                        <option value="Admin" selected="@(Model.UserRole == "Admin")">Admin</option>
+                                        <option value="Employee" selected="@(Model.UserRole == "Employee")">Employee</option>
+                                        <option value="Waiter" selected="@(Model.UserRole == "Waiter")">Waiter</option>
+                                        <option value="Manager" selected="@(Model.UserRole == "Manager")">Manager</option>
+                                    </select>
+                                    <span asp-validation-for="UserRole" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-person-plus"></i> Create User
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-people"></i> All Users</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.UsersList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Username</th>
+                                                <th>Role</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var user in Model.UsersList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@user.Id</strong></td>
+                                                    <td>@user.Username</td>
+                                                    <td>
+                                                        <span class="badge bg-success">@user.Role</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (user.Id.HasValue)
+                                                        {
+                                                            <form method="post"
+                                                                  asp-page-handler="DeleteUser"
+                                                                  asp-route-id="@user.Id.Value"
+                                                                  asp-route-tab="users"
+                                                                  class="inline-form"
+                                                                  onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No users created yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div class="tab-pane fade" id="products" role="tabpanel">
+            <div class="row">
+                <!-- Create Product Form -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Add New Product</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="CreateProduct">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ActiveTab" value="products" />
+                                
+                                <div class="mb-3">
+                                    <label for="ProductName" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="ProductName" name="ProductName" 
+                                           value="@Model.ProductName" placeholder="Enter product name" required>
+                                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="ProductDescription" name="ProductDescription" 
+                                              rows="3" placeholder="Enter product description">@Model.ProductDescription</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductPrice" class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">€</span>
+                                        <input type="number" class="form-control" id="ProductPrice" name="ProductPrice" 
+                                               value="@Model.ProductPrice" placeholder="0.00" step="0.01" min="0" required>
+                                    </div>
+                                    <span asp-validation-for="ProductPrice" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="ProductCategory" class="form-label">Category</label>
+                                    <select class="form-select" id="ProductCategory" name="ProductCategory" required>
+                                        <option value="">Select a category</option>
+                                        <option value="Food" selected="@(Model.ProductCategory == "Food")">Food</option>
+                                        <option value="Beverage" selected="@(Model.ProductCategory == "Beverage")">Beverage</option>
+                                        <option value="Dessert" selected="@(Model.ProductCategory == "Dessert")">Dessert</option>
+                                        <option value="Appetizer" selected="@(Model.ProductCategory == "Appetizer")">Appetizer</option>
+                                    </select>
+                                    <span asp-validation-for="ProductCategory" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-warning w-100 text-dark">
+                                    <i class="bi bi-box-seam"></i> Add Product
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Products</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.ProductsList.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                                <th>Price</th>
+                                                <th>Category</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var product in Model.ProductsList)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@product.id</strong></td>
+                                                    <td><strong>@product.name</strong></td>
+                                                    <td>@(product.description ?? "-")</td>
+                                                    <td><strong>@product.price.ToString("F2")€</strong></td>
+                                                    <td>
+                                                        <span class="badge bg-warning text-dark">@product.category</span>
+                                                    </td>
+                                                    <td>
+                                                        <form method="post" asp-page-handler="DeleteProduct" asp-route-id="@product.id" asp-route-tab="products"
+                                                              class="inline-form" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No products created yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tableModal = document.getElementById('tableModal');
-    let currentTableId = null;
-    let orderItems = []; // Array to store order items
-
-    // When modal opens
-    tableModal.addEventListener('show.bs.modal', async function (event) {
-        const button = event.relatedTarget;
-        
-        const tableId = button.getAttribute('data-table-id');
-        const tableNumber = button.getAttribute('data-table-number');
-        const tableSeats = button.getAttribute('data-table-seats');
-        const tableStatus = button.getAttribute('data-table-status');
-
-        // Store current table ID
-        currentTableId = parseInt(tableId);
-
-        // Update table information
-        document.getElementById('modalTableNumber').textContent = tableNumber || '-';
-        document.getElementById('modalTableSeats').textContent = tableSeats || '-';
-        
-        const statusBadge = document.getElementById('modalTableStatus');
-        statusBadge.textContent = tableStatus || 'Available';
-        statusBadge.className = 'badge ' + getStatusBadgeClass(tableStatus);
-
-        // Reset order items
-        orderItems = [];
-        resetProductForm();
-        
-        // Hide pay order form initially
-        const payOrderForm = document.getElementById('payOrderForm');
-        const payOrderIdInput = document.getElementById('payOrderId');
-        payOrderForm.style.display = 'none';
-
-        // Load existing pending order for this table
-        try {
-            const response = await fetch(`/Dashboard?handler=TableOrders&tableId=${currentTableId}`);
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.hasPendingOrder && data.items && data.items.length > 0) {
-                    // Load items from pending order
-                    orderItems = data.items.map(item => ({
-                        productId: item.productId,
-                        productName: item.productName,
-                        price: item.price,
-                        quantity: item.quantity
-                    }));
-                    
-                    // Show pay order button and set order ID
-                    payOrderIdInput.value = data.orderId;
-                    payOrderForm.style.display = 'inline-block';
-                } else {
-                    // No pending order, hide pay button
-                    payOrderForm.style.display = 'none';
-                }
-                
-                updateOrderItemsDisplay();
-            }
-        } catch (error) {
-            console.error('Error loading table orders:', error);
-            // Continue with empty cart if error
-            updateOrderItemsDisplay();
-        }
-    });
-
-    // When modal closes
-    tableModal.addEventListener('hidden.bs.modal', function () {
-        orderItems = [];
-        currentTableId = null;
-        resetProductForm();
-    });
-
-    // Get status badge class
-    function getStatusBadgeClass(status) {
-        const s = (status || 'Available').toLowerCase();
-        if (s === 'available') return 'bg-success';
-        else if (s === 'occupied') return 'bg-danger';
-        else if (s === 'reserved') return 'bg-warning';
-        else return 'bg-secondary';
-    }
-
-    // Reset product form
-    function resetProductForm() {
-        document.getElementById('productSelect').value = '';
-        document.getElementById('productQuantity').value = '1';
-    }
-
-    // Add product to order
-    document.getElementById('addProductBtn').addEventListener('click', function() {
-        const productSelect = document.getElementById('productSelect');
-        const quantityInput = document.getElementById('productQuantity');
-        
-        const productId = parseInt(productSelect.value);
-        const quantity = parseInt(quantityInput.value);
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        
-        if (!productId || !selectedOption) {
-            alert('Please select a product.');
-            return;
-        }
-
-        if (!quantity || quantity < 1) {
-            alert('Please enter a valid quantity (minimum 1).');
-            return;
-        }
-
-        const productName = selectedOption.getAttribute('data-name');
-        const price = parseFloat(selectedOption.getAttribute('data-price'));
-
-        // Check if product already exists in cart
-        const existingItemIndex = orderItems.findIndex(item => item.productId === productId);
-        
-        if (existingItemIndex >= 0) {
-            // Update quantity if product already exists
-            orderItems[existingItemIndex].quantity += quantity;
-        } else {
-            // Add new item
-            orderItems.push({
-                productId: productId,
-                productName: productName,
-                price: price,
-                quantity: quantity
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Activate the correct tab based on URL parameter or ViewData
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab') || '@(ViewData["ActiveTab"] ?? "tables")';
+            
+            // Remove active class from all tabs and panes
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('show', 'active');
             });
-        }
-
-        updateOrderItemsDisplay();
-        resetProductForm();
-    });
-
-    // Remove item from order
-    function removeOrderItem(index) {
-        orderItems.splice(index, 1);
-        updateOrderItemsDisplay();
-    }
-
-    // Update hidden inputs when order items change
-    function updateHiddenInputs() {
-        const hiddenInputsContainer = document.getElementById('orderItemsHiddenInputs');
-        const tableIdInput = document.getElementById('orderTableId');
-        
-        // Clear existing inputs
-        hiddenInputsContainer.innerHTML = '';
-        
-        // Set table ID
-        if (currentTableId) {
-            tableIdInput.value = currentTableId;
-        }
-        
-        // Add hidden inputs for each order item
-        orderItems.forEach((item, index) => {
-            // ProductId
-            const productIdInput = document.createElement('input');
-            productIdInput.type = 'hidden';
-            productIdInput.name = `OrderItems[${index}].ProductId`;
-            productIdInput.value = item.productId;
-            hiddenInputsContainer.appendChild(productIdInput);
             
-            // Quantity
-            const quantityInput = document.createElement('input');
-            quantityInput.type = 'hidden';
-            quantityInput.name = `OrderItems[${index}].Quantity`;
-            quantityInput.value = item.quantity;
-            hiddenInputsContainer.appendChild(quantityInput);
+            // Activate the correct tab
+            const tabButton = document.getElementById(tab + '-tab');
+            const tabPane = document.getElementById(tab);
             
-            // Price
-            const priceInput = document.createElement('input');
-            priceInput.type = 'hidden';
-            priceInput.name = `OrderItems[${index}].Price`;
-            priceInput.value = item.price;
-            hiddenInputsContainer.appendChild(priceInput);
+            if (tabButton && tabPane) {
+                tabButton.classList.add('active');
+                tabPane.classList.add('show', 'active');
+            } else {
+                // Fallback to tables tab if invalid tab name
+                document.getElementById('tables-tab')?.classList.add('active');
+                document.getElementById('tables')?.classList.add('show', 'active');
+            }
         });
-    }
-
-    // Update order items display
-    function updateOrderItemsDisplay() {
-        const tbody = document.getElementById('orderItemsTableBody');
-        const emptyMessage = document.getElementById('emptyCartMessage');
-        const saveOrderBtn = document.getElementById('saveOrderBtn');
-        const orderTotal = document.getElementById('orderTotal');
-
-        // Clear table body
-        tbody.innerHTML = '';
-
-        if (orderItems.length === 0) {
-            tbody.innerHTML = '<tr id="emptyCartMessage"><td colspan="5" class="text-center text-muted"><i class="bi bi-cart-x"></i> No items added yet. Select a product and add it to the order.</td></tr>';
-            saveOrderBtn.disabled = true;
-            orderTotal.textContent = '0.00€';
-            updateHiddenInputs();
-            return;
-        }
-
-        // Calculate total
-        let total = 0;
-
-        // Add items to table
-        orderItems.forEach((item, index) => {
-            const subtotal = item.price * item.quantity;
-            total += subtotal;
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${item.productName}</strong></td>
-                <td>${item.price.toFixed(2)}€</td>
-                <td>${item.quantity}</td>
-                <td><strong>${subtotal.toFixed(2)}€</strong></td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(${index})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-
-        orderTotal.textContent = total.toFixed(2) + '€';
-        saveOrderBtn.disabled = false;
-        updateHiddenInputs();
-    }
-
-    // Make removeOrderItem available globally
-    window.removeOrderItem = removeOrderItem;
-
-    // Handle save order form submission
-    document.getElementById('saveOrderForm').addEventListener('submit', function(e) {
-        if (!currentTableId || orderItems.length === 0) {
-            e.preventDefault();
-            alert('Please add at least one product to the order.');
-            return false;
-        }
-
-        // Update hidden inputs before submit
-        updateHiddenInputs();
-        
-        // Disable button during submission
-        const saveBtn = document.getElementById('saveOrderBtn');
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-    });
-
-    // Handle pay order form submission
-    document.getElementById('payOrderForm').addEventListener('submit', function(e) {
-        const payBtn = document.getElementById('payOrderBtn');
-        if (!confirm('Are you sure you want to mark this order as paid? This will close the current order and allow creating a new one.')) {
-            e.preventDefault();
-            return false;
-        }
-        
-        // Disable button during submission
-        payBtn.disabled = true;
-        payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-    });
-});
-</script>
-
+    </script>
+}
