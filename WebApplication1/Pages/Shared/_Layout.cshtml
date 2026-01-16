@@ -25,28 +25,28 @@
                 <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 @{
-                    var hasManagerRole = false;
+                    var hasAccessRole = false;
                     
                     // Check role from claims first
                     if (User.Identity?.IsAuthenticated == true)
                     {
-                        // Try multiple ways to check for Manager role
-                        hasManagerRole = User.IsInRole("Manager");
+                        // Check for Manager role from Auth0 claims
+                        hasAccessRole = User.IsInRole("Manager");
                         
-                        if (!hasManagerRole)
+                        if (!hasAccessRole)
                         {
-                            hasManagerRole = User.HasClaim(ClaimTypes.Role, "Manager");
+                            hasAccessRole = User.HasClaim(ClaimTypes.Role, "Manager");
                         }
                         
-                        if (!hasManagerRole)
+                        if (!hasAccessRole)
                         {
-                            hasManagerRole = User.Claims.Any(c => 
+                            hasAccessRole = User.Claims.Any(c => 
                                 (c.Type == ClaimTypes.Role || c.Type == "role") && 
                                 c.Value == "Manager");
                         }
                         
-                        // If still not found in claims, check database directly
-                        if (!hasManagerRole)
+                        // If still not found in claims, check database directly for Manager or Admin
+                        if (!hasAccessRole)
                         {
                             try
                             {
@@ -62,7 +62,11 @@
                                     if (userRepo != null)
                                     {
                                         var dbUser = userRepo.GetUserByUsername(username);
-                                        hasManagerRole = dbUser != null && !string.IsNullOrEmpty(dbUser.role) && dbUser.role == "Manager";
+                                        if (dbUser != null && !string.IsNullOrEmpty(dbUser.role))
+                                        {
+                                            // Check for Manager or Admin role from database
+                                            hasAccessRole = dbUser.role == "Manager" || dbUser.role == "Admin";
+                                        }
                                     }
                                 }
                             }
@@ -73,7 +77,7 @@
                         }
                     }
                 }
-                @if (hasManagerRole)
+                @if (hasAccessRole)
                 {
                     <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")" asp-area="" asp-page="/Index">

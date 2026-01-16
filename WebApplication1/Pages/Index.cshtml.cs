@@ -76,12 +76,68 @@ namespace DTMS.Pages
             return _tableService.GetStatusBadgeStyle(status ?? string.Empty);
         }
 
-        public void OnGet(string? tab = null)
+        private bool HasAccess()
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return false;
+            }
+
+            // Check for Manager role from Auth0 claims
+            if (User.IsInRole("Manager"))
+            {
+                return true;
+            }
+
+            if (User.HasClaim(ClaimTypes.Role, "Manager"))
+            {
+                return true;
+            }
+
+            if (User.Claims.Any(c => (c.Type == ClaimTypes.Role || c.Type == "role") && c.Value == "Manager"))
+            {
+                return true;
+            }
+
+            // Check database for Manager or Admin role
+            try
+            {
+                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("name")?.Value;
+                var subClaim = User.FindFirst("sub")?.Value;
+                var username = emailClaim ?? nameClaim ?? subClaim;
+
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var dbUser = _userRepository.GetUserByUsername(username);
+                    if (dbUser != null && !string.IsNullOrEmpty(dbUser.role))
+                    {
+                        return dbUser.role == "Manager" || dbUser.role == "Admin";
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors
+            }
+
+            return false;
+        }
+
+        public IActionResult OnGet(string? tab = null)
+        {
+            // Check if user has access (Manager from Auth0 or Admin/Manager from DB)
+            if (!HasAccess())
+            {
+                TempData["ErrorMessage"] = "You do not have permission to access this page.";
+                return RedirectToPage("/Dashboard");
+            }
+
             TablesList = TableVMMappers.ToViewModelList(_tableService.GetAllTables());
             UsersList = _userService.GetAllUsers();
             ProductsList = _productService.GetAllProducts();
             ViewData["ActiveTab"] = tab ?? "tables";
+            return Page();
         }
 
         private IActionResult RedirectToPageWithTab(string tab)

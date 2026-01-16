@@ -78,64 +78,56 @@ app.Use(async (context, next) =>
 {
     if (context.User.Identity?.IsAuthenticated == true)
     {
-        // Check if role claim already exists
-        if (!context.User.HasClaim(c => c.Type == ClaimTypes.Role))
+        try
         {
-            try
+            // Get user repository from service provider
+            var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
+            
+            // Get username from Auth0 claims (try multiple sources)
+            var emailClaim = context.User.FindFirst(ClaimTypes.Email)?.Value;
+            var nameClaim = context.User.FindFirst(ClaimTypes.Name)?.Value ?? context.User.FindFirst("name")?.Value;
+            var subClaim = context.User.FindFirst("sub")?.Value;
+            
+            var username = emailClaim ?? nameClaim ?? subClaim;
+            
+            if (!string.IsNullOrEmpty(username))
             {
-                // Get user repository from service provider
-                var userRepository = context.RequestServices.GetRequiredService<IUserRepository>();
+                // Get user from database
+                var user = userRepository.GetUserByUsername(username);
                 
-                // Get username from Auth0 claims (try multiple sources)
-                var emailClaim = context.User.FindFirst(ClaimTypes.Email)?.Value;
-                var nameClaim = context.User.FindFirst(ClaimTypes.Name)?.Value ?? context.User.FindFirst("name")?.Value;
-                var subClaim = context.User.FindFirst("sub")?.Value;
-                
-                var username = emailClaim ?? nameClaim ?? subClaim;
-                
-                if (!string.IsNullOrEmpty(username))
+                if (user != null && !string.IsNullOrEmpty(user.role))
                 {
-                    // Get user from database
-                    var user = userRepository.GetUserByUsername(username);
+                    // Check if database role is already in claims
+                    var hasDbRole = context.User.HasClaim(ClaimTypes.Role, user.role);
                     
-                    if (user != null && !string.IsNullOrEmpty(user.role))
+                    // Always add/update database role to ensure it's available
+                    if (!hasDbRole)
                     {
-                        // Get the existing identity
-                        var existingIdentity = context.User.Identity as ClaimsIdentity;
+                        // Create new identity copying all existing claims
+                        var identity = new ClaimsIdentity(
+                            context.User.Identity.AuthenticationType,
+                            context.User.Identity.NameClaimType,
+                            context.User.Identity.RoleClaimType);
                         
-                        if (existingIdentity != null)
+                        // Copy all existing claims
+                        foreach (var claim in context.User.Claims)
                         {
-                            // Add role claim to existing identity
-                            existingIdentity.AddClaim(new Claim(ClaimTypes.Role, user.role));
+                            identity.AddClaim(claim);
                         }
-                        else
-                        {
-                            // Create new identity if existing one is not ClaimsIdentity
-                            var newIdentity = new ClaimsIdentity(
-                                context.User.Identity.AuthenticationType,
-                                ClaimTypes.Name,
-                                ClaimTypes.Role);
-                            
-                            // Copy all existing claims
-                            foreach (var claim in context.User.Claims)
-                            {
-                                newIdentity.AddClaim(claim);
-                            }
-                            
-                            // Add role claim
-                            newIdentity.AddClaim(new Claim(ClaimTypes.Role, user.role));
-                            
-                            // Replace the user principal
-                            context.User = new ClaimsPrincipal(newIdentity);
-                        }
+                        
+                        // Add role claim from database
+                        identity.AddClaim(new Claim(ClaimTypes.Role, user.role));
+                        
+                        // Replace the user principal
+                        context.User = new ClaimsPrincipal(identity);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                // Log error but don't break the request
-                Console.WriteLine($"Error adding role claim: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't break the request
+            Console.WriteLine($"Error adding role claim: {ex.Message}");
         }
     }
     
