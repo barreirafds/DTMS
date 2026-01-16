@@ -4,6 +4,8 @@
     ViewData["Title"] = "Dashboard";
 }
 
+<link rel="stylesheet" href="~/css/table-modal.css" asp-append-version="true" />
+
 <br/>
 <h1 class="mb-4">@ViewData["Title"]</h1>
 
@@ -83,24 +85,12 @@ else
             <!-- Modal Body -->
             <div class="modal-body">
                 <!-- Table Information -->
-                <div class="table-info-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap">
-                        <div class="table-info-item">
-                            <i class="bi bi-table"></i>
-                            <span class="info-label">Table</span>
-                            <span class="info-value" id="modalTableNumber">-</span>
-                        </div>
-                        <div class="table-info-item">
-                            <i class="bi bi-people"></i>
-                            <span class="info-label">Seats</span>
-                            <span class="info-value" id="modalTableSeats">-</span>
-                        </div>
-                        <div class="table-info-item">
-                            <i class="bi bi-circle-fill"></i>
-                            <span class="info-label">Status</span>
-                            <span id="modalTableStatus" class="badge status-badge">-</span>
-                        </div>
-                    </div>
+                <div class="table-info-simple mb-4">
+                    <p class="table-info-text">
+                        <strong>Table #<span id="modalTableNumber">-</span></strong> | 
+                        <strong>Seats:</strong> <span id="modalTableSeats">-</span> | 
+                        <strong>Status:</strong> <span id="modalTableStatus" class="table-status-text">-</span>
+                    </p>
                 </div>
 
                 <!-- Add Product Section -->
@@ -236,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const statusBadge = document.getElementById('modalTableStatus');
         statusBadge.textContent = tableStatus || 'Available';
-        statusBadge.className = 'badge ' + getStatusBadgeClass(tableStatus);
+        statusBadge.className = 'table-status-text badge ' + getStatusBadgeClass(tableStatus);
 
         // Reset order items
         orderItems = [];

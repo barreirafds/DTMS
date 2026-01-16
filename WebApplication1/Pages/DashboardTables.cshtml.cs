@@ -197,7 +197,10 @@ namespace DTMS.Pages
                 return RedirectToPage();
             }
 
-            TempData["SuccessMessage"] = $"Order saved successfully for Table #{OrderTableId}!";
+            // Get table number for success message
+            var table = _tableRepository.GetTable(OrderTableId);
+            var tableNumber = table?.number ?? OrderTableId;
+            TempData["SuccessMessage"] = $"Order saved successfully for Table #{tableNumber}!";
             return RedirectToPage();
         }
 
