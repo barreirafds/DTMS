@@ -7,7 +7,7 @@ namespace DTMS.Pages
 {
     public class LoginModel : PageModel
     {
-        public async Task<IActionResult> OnGet(string returnUrl = "/")
+        public async Task<IActionResult> OnGet(string returnUrl = "/DashboardTables")
         {
             try
             {

@@ -24,6 +24,7 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
 // Razor Pages Configuration
 builder.Services.AddRazorPages(options =>
 {
+    options.Conventions.AllowAnonymousToPage("/Index");
     options.Conventions.AllowAnonymousToPage("/Login");
     options.Conventions.AllowAnonymousToPage("/Register");
     options.Conventions.AllowAnonymousToPage("/Logout");
@@ -74,7 +75,7 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure default route to redirect to Index (Dashboard page)
+// Configure default route to redirect to Index (Welcome page)
 app.MapGet("/", () => Results.Redirect("/Index"));
 
 app.MapRazorPages();

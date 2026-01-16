@@ -1,0 +1,470 @@
+@page
+@model DashboardTablesModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<br/>
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h6><i class="bi bi-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+        <ul class="mb-0">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.ShowTableEmployee.Any())
+{
+    <!-- Grid of the square -->
+    <div class="row g-3">
+        @foreach (var table in Model.ShowTableEmployee)
+        {
+            <!-- square box -->
+            <div class="col-md-3 col-sm-4 col-6">
+                <div class="table-card card h-100 shadow-sm" 
+                     data-bs-toggle="modal" 
+                     data-bs-target="#tableModal" 
+                     data-table-id="@table.id"
+                     data-table-number="@table.number"
+                     data-table-seats="@table.seats"
+                     data-table-status="@table.status">
+                    <div class="card-body text-center">
+                        <h3 class="mb-2">Table #@table.number</h3>
+                        <span class="badge @(Model.GetStatusBadgeClass(table.status))">
+                            @(table.status ?? "Available")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No tables available.
+    </div>
+}
+
+
+<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <!-- Header do Modal -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="tableModalLabel">Table Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Table Information -->
+                <div class="table-info-card mb-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap">
+                        <div class="table-info-item">
+                            <i class="bi bi-table"></i>
+                            <span class="info-label">Table</span>
+                            <span class="info-value" id="modalTableNumber">-</span>
+                        </div>
+                        <div class="table-info-item">
+                            <i class="bi bi-people"></i>
+                            <span class="info-label">Seats</span>
+                            <span class="info-value" id="modalTableSeats">-</span>
+                        </div>
+                        <div class="table-info-item">
+                            <i class="bi bi-circle-fill"></i>
+                            <span class="info-label">Status</span>
+                            <span id="modalTableStatus" class="badge status-badge">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Product Section -->
+                <div class="add-product-card mb-4">
+                    <div class="section-header">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <h6 class="mb-0">Add Product to Order</h6>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-box-seam"></i> Select Product
+                                </label>
+                                <select class="form-select form-select-lg" id="productSelect">
+                                    <option value="">Choose a product...</option>
+                                    @foreach (var product in Model.Products)
+                                    {
+                                        <option value="@product.id" 
+                                                data-price="@product.price.ToString("F2")" 
+                                                data-name="@product.name">
+                                            @product.name - @product.price.ToString("F2")€ (@product.category)
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="bi bi-123"></i> Quantity
+                                </label>
+                                <input type="number" class="form-control form-control-lg" id="productQuantity" 
+                                       min="1" value="1" placeholder="Qty">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-add-product w-100" id="addProductBtn">
+                                    <i class="bi bi-plus-circle"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items (Cart) -->
+                <div class="order-items-card">
+                    <div class="section-header">
+                        <i class="bi bi-cart-check-fill"></i>
+                        <h6 class="mb-0">Order Items</h6>
+                    </div>
+                    <div class="section-body">
+                        <div id="orderItemsContainer">
+                            <div id="orderItemsList" class="table-responsive">
+                                <table class="table order-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="bi bi-box-seam"></i> Product</th>
+                                            <th><i class="bi bi-currency-euro"></i> Price</th>
+                                            <th><i class="bi bi-123"></i> Quantity</th>
+                                            <th><i class="bi bi-calculator"></i> Subtotal</th>
+                                            <th><i class="bi bi-gear"></i> Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orderItemsTableBody">
+                                        <tr id="emptyCartMessage">
+                                            <td colspan="5" class="empty-cart">
+                                                <i class="bi bi-cart-x"></i>
+                                                <p>No items added yet</p>
+                                                <small>Select a product and add it to the order</small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="3" class="text-end total-label">
+                                                <strong>Total:</strong>
+                                            </td>
+                                            <td class="total-amount">
+                                                <strong id="orderTotal">0.00€</strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form method="post" asp-page-handler="PayOrder" id="payOrderForm" style="display: none;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="payOrderId" name="orderId" value="" />
+                    <button type="submit" class="btn btn-warning" id="payOrderBtn">
+                        <i class="bi bi-cash-coin"></i> Pay Order
+                    </button>
+                </form>
+                <form method="post" asp-page-handler="SaveOrder" id="saveOrderForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="orderTableId" name="OrderTableId" value="" />
+                    <div id="orderItemsHiddenInputs"></div>
+                    <button type="submit" class="btn btn-success" id="saveOrderBtn" disabled>
+                        <i class="bi bi-save"></i> Save Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableModal = document.getElementById('tableModal');
+    let currentTableId = null;
+    let orderItems = []; // Array to store order items
+
+    // When modal opens
+    tableModal.addEventListener('show.bs.modal', async function (event) {
+        const button = event.relatedTarget;
+        
+        const tableId = button.getAttribute('data-table-id');
+        const tableNumber = button.getAttribute('data-table-number');
+        const tableSeats = button.getAttribute('data-table-seats');
+        const tableStatus = button.getAttribute('data-table-status');
+
+        // Store current table ID
+        currentTableId = parseInt(tableId);
+
+        // Update table information
+        document.getElementById('modalTableNumber').textContent = tableNumber || '-';
+        document.getElementById('modalTableSeats').textContent = tableSeats || '-';
+        
+        const statusBadge = document.getElementById('modalTableStatus');
+        statusBadge.textContent = tableStatus || 'Available';
+        statusBadge.className = 'badge ' + getStatusBadgeClass(tableStatus);
+
+        // Reset order items
+        orderItems = [];
+        resetProductForm();
+        
+        // Hide pay order form initially
+        const payOrderForm = document.getElementById('payOrderForm');
+        const payOrderIdInput = document.getElementById('payOrderId');
+        payOrderForm.style.display = 'none';
+
+        // Load existing pending order for this table
+        try {
+            const response = await fetch(`/DashboardTables?handler=TableOrders&tableId=${currentTableId}`);
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.hasPendingOrder && data.items && data.items.length > 0) {
+                    // Load items from pending order
+                    orderItems = data.items.map(item => ({
+                        productId: item.productId,
+                        productName: item.productName,
+                        price: item.price,
+                        quantity: item.quantity
+                    }));
+                    
+                    // Show pay order button and set order ID
+                    payOrderIdInput.value = data.orderId;
+                    payOrderForm.style.display = 'inline-block';
+                } else {
+                    // No pending order, hide pay button
+                    payOrderForm.style.display = 'none';
+                }
+                
+                updateOrderItemsDisplay();
+            }
+        } catch (error) {
+            console.error('Error loading table orders:', error);
+            // Continue with empty cart if error
+            updateOrderItemsDisplay();
+        }
+    });
+
+    // When modal closes
+    tableModal.addEventListener('hidden.bs.modal', function () {
+        orderItems = [];
+        currentTableId = null;
+        resetProductForm();
+    });
+
+    // Get status badge class
+    function getStatusBadgeClass(status) {
+        const s = (status || 'Available').toLowerCase();
+        if (s === 'available') return 'bg-success';
+        else if (s === 'occupied') return 'bg-danger';
+        else if (s === 'reserved') return 'bg-warning';
+        else return 'bg-secondary';
+    }
+
+    // Reset product form
+    function resetProductForm() {
+        document.getElementById('productSelect').value = '';
+        document.getElementById('productQuantity').value = '1';
+    }
+
+    // Add product to order
+    document.getElementById('addProductBtn').addEventListener('click', function() {
+        const productSelect = document.getElementById('productSelect');
+        const quantityInput = document.getElementById('productQuantity');
+        
+        const productId = parseInt(productSelect.value);
+        const quantity = parseInt(quantityInput.value);
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        
+        if (!productId || !selectedOption) {
+            alert('Please select a product.');
+            return;
+        }
+
+        if (!quantity || quantity < 1) {
+            alert('Please enter a valid quantity (minimum 1).');
+            return;
+        }
+
+        const productName = selectedOption.getAttribute('data-name');
+        const price = parseFloat(selectedOption.getAttribute('data-price'));
+
+        // Check if product already exists in cart
+        const existingItemIndex = orderItems.findIndex(item => item.productId === productId);
+        
+        if (existingItemIndex >= 0) {
+            // Update quantity if product already exists
+            orderItems[existingItemIndex].quantity += quantity;
+        } else {
+            // Add new item
+            orderItems.push({
+                productId: productId,
+                productName: productName,
+                price: price,
+                quantity: quantity
+            });
+        }
+
+        updateOrderItemsDisplay();
+        resetProductForm();
+    });
+
+    // Remove item from order
+    function removeOrderItem(index) {
+        orderItems.splice(index, 1);
+        updateOrderItemsDisplay();
+    }
+
+    // Update hidden inputs when order items change
+    function updateHiddenInputs() {
+        const hiddenInputsContainer = document.getElementById('orderItemsHiddenInputs');
+        const tableIdInput = document.getElementById('orderTableId');
+        
+        // Clear existing inputs
+        hiddenInputsContainer.innerHTML = '';
+        
+        // Set table ID
+        if (currentTableId) {
+            tableIdInput.value = currentTableId;
+        }
+        
+        // Add hidden inputs for each order item
+        orderItems.forEach((item, index) => {
+            // ProductId
+            const productIdInput = document.createElement('input');
+            productIdInput.type = 'hidden';
+            productIdInput.name = `OrderItems[${index}].ProductId`;
+            productIdInput.value = item.productId;
+            hiddenInputsContainer.appendChild(productIdInput);
+            
+            // Quantity
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'hidden';
+            quantityInput.name = `OrderItems[${index}].Quantity`;
+            quantityInput.value = item.quantity;
+            hiddenInputsContainer.appendChild(quantityInput);
+            
+            // Price
+            const priceInput = document.createElement('input');
+            priceInput.type = 'hidden';
+            priceInput.name = `OrderItems[${index}].Price`;
+            priceInput.value = item.price;
+            hiddenInputsContainer.appendChild(priceInput);
+        });
+    }
+
+    // Update order items display
+    function updateOrderItemsDisplay() {
+        const tbody = document.getElementById('orderItemsTableBody');
+        const emptyMessage = document.getElementById('emptyCartMessage');
+        const saveOrderBtn = document.getElementById('saveOrderBtn');
+        const orderTotal = document.getElementById('orderTotal');
+
+        // Clear table body
+        tbody.innerHTML = '';
+
+        if (orderItems.length === 0) {
+            tbody.innerHTML = '<tr id="emptyCartMessage"><td colspan="5" class="text-center text-muted"><i class="bi bi-cart-x"></i> No items added yet. Select a product and add it to the order.</td></tr>';
+            saveOrderBtn.disabled = true;
+            orderTotal.textContent = '0.00€';
+            updateHiddenInputs();
+            return;
+        }
+
+        // Calculate total
+        let total = 0;
+
+        // Add items to table
+        orderItems.forEach((item, index) => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${item.productName}</strong></td>
+                <td>${item.price.toFixed(2)}€</td>
+                <td>${item.quantity}</td>
+                <td><strong>${subtotal.toFixed(2)}€</strong></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(${index})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        orderTotal.textContent = total.toFixed(2) + '€';
+        saveOrderBtn.disabled = false;
+        updateHiddenInputs();
+    }
+
+    // Make removeOrderItem available globally
+    window.removeOrderItem = removeOrderItem;
+
+    // Handle save order form submission
+    document.getElementById('saveOrderForm').addEventListener('submit', function(e) {
+        if (!currentTableId || orderItems.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one product to the order.');
+            return false;
+        }
+
+        // Update hidden inputs before submit
+        updateHiddenInputs();
+        
+        // Disable button during submission
+        const saveBtn = document.getElementById('saveOrderBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    });
+
+    // Handle pay order form submission
+    document.getElementById('payOrderForm').addEventListener('submit', function(e) {
+        const payBtn = document.getElementById('payOrderBtn');
+        if (!confirm('Are you sure you want to mark this order as paid? This will close the current order and allow creating a new one.')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Disable button during submission
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    });
+});
+</script>
+

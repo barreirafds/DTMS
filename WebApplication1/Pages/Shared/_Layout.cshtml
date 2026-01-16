@@ -78,7 +78,7 @@
                     }
                 }
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")" asp-area="" asp-page="/Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/DashboardTables" ? "active" : "")" asp-area="" asp-page="/DashboardTables">
                                 <i class="bi bi-table me-1"></i>
                                 <span>Dashboard</span>
                             </a>
@@ -112,7 +112,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Login" ? "active" : "")" asp-area="" asp-page="/Login">
+                                <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Login" ? "active" : "")" asp-area="" asp-page="/Index">
                                     <i class="bi bi-box-arrow-in-right me-1"></i>
                                     <span>Login</span>
                                 </a>

@@ -13,7 +13,7 @@ using System.Text.Json;
 
 namespace DTMS.Pages
 {
-    public class IndexModel : PageModel
+    public class DashboardModel : PageModel
     {
         private readonly ITableService _tableService;
         private readonly IUserService _userService;
@@ -21,7 +21,7 @@ namespace DTMS.Pages
         private readonly IOrderService _orderService;
         private readonly IUserRepository _userRepository;
 
-        public IndexModel(ITableService tableService, IUserService userService, IProductService productService, IOrderService orderService, IUserRepository userRepository)
+        public DashboardModel(ITableService tableService, IUserService userService, IProductService productService, IOrderService orderService, IUserRepository userRepository)
         {
             _tableService = tableService;
             _userService = userService;
