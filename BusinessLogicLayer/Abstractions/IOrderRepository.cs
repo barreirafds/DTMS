@@ -14,5 +14,6 @@ public interface IOrderRepository
     List<order_item> GetOrderItems(int orderId);
     void UpdateOrderStatus(int orderId, string status);
     void DeleteOrdersByTableId(int tableId);
+    int GetOrderCountByUserId(int userId);
 }
 

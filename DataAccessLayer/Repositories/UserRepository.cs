@@ -118,7 +118,12 @@ public class UserRepository : IUserRepository
         const string query = "DELETE FROM [user] WHERE [id]=@id;";
         using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@id", id);
-        cmd.ExecuteNonQuery();
+        int rowsAffected = cmd.ExecuteNonQuery();
+        
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException($"User with ID {id} was not found or could not be deleted.");
+        }
     }
 }
 

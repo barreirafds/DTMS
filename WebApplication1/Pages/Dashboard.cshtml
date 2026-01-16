@@ -236,10 +236,10 @@
                                                             <form method="post"
                                                                   asp-page-handler="DeleteUser"
                                                                   asp-route-id="@user.Id.Value"
-                                                                  asp-route-tab="users"
                                                                   class="inline-form"
                                                                   onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                                 @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="tab" value="users" />
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                                                     <i class="bi bi-trash"></i>
                                                                 </button>

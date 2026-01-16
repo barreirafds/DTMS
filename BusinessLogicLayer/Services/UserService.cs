@@ -7,10 +7,12 @@ namespace BusinessLogicLayer.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IOrderRepository _orderRepository;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IOrderRepository orderRepository)
     {
         _userRepository = userRepository;
+        _orderRepository = orderRepository;
     }
 
     public List<UserDTO> GetAllUsers()
@@ -108,16 +110,29 @@ public class UserService : IUserService
     {
         if (id <= 0)
         {
-            return;
+            throw new ArgumentException("Invalid user ID. ID must be greater than 0.", nameof(id));
         }
 
         try
         {
+            // Check if user has associated orders
+            var orderCount = _orderRepository.GetOrderCountByUserId(id);
+            if (orderCount > 0)
+            {
+                throw new InvalidOperationException($"Cannot delete user. This user has {orderCount} order(s) associated. Please delete or reassign the orders first.");
+            }
+
             _userRepository.DeleteUser(id);
         }
-        catch (Exception)
+        catch (InvalidOperationException)
         {
-            // Silently fail to prevent application crash
+            // Re-throw InvalidOperationException as-is (our custom validation)
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Re-throw other exceptions with context
+            throw new InvalidOperationException($"Error deleting user: {ex.Message}", ex);
         }
     }
 }

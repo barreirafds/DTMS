@@ -226,6 +226,19 @@ public class OrderRepository : IOrderRepository
         cmd.ExecuteNonQuery();
     }
 
+    public int GetOrderCountByUserId(int userId)
+    {
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        const string query = "SELECT COUNT(*) FROM [order] WHERE [user_id]=@user_id;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@user_id", userId);
+        
+        var count = (int)cmd.ExecuteScalar();
+        return count;
+    }
+
     public void DeleteOrdersByTableId(int tableId)
     {
         using var conn = new SqlConnection(connString);

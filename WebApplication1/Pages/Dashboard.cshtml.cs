@@ -203,19 +203,46 @@ namespace DTMS.Pages
             return RedirectToPageWithTab(ActiveTab ?? "users");
         }
 
-        public IActionResult OnPostDeleteUser(int id, string? tab = null)
+        public IActionResult OnPostDeleteUser(int id, [FromForm] string? tab = null)
         {
+            if (!HasAccess())
+            {
+                TempData["ErrorMessage"] = "You do not have permission to delete users.";
+                return RedirectToPage("/Index");
+            }
+
             if (id <= 0)
             {
                 TempData["ErrorMessage"] = "Invalid user ID.";
-                OnGet(tab ?? "users");
-                return Page();
+                return RedirectToPageWithTab(tab ?? "users");
             }
 
             try
             {
+                // Verify user exists before deleting
+                var users = _userService.GetAllUsers();
+                var userToDelete = users.FirstOrDefault(u => u.Id.HasValue && u.Id.Value == id);
+                
+                if (userToDelete == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToPageWithTab(tab ?? "users");
+                }
+
                 _userService.DeleteUser(id);
-                TempData["SuccessMessage"] = "User deleted successfully!";
+                
+                // Verify deletion was successful by checking if user still exists
+                users = _userService.GetAllUsers();
+                var stillExists = users.Any(u => u.Id.HasValue && u.Id.Value == id);
+                
+                if (stillExists)
+                {
+                    TempData["ErrorMessage"] = "Failed to delete user. The user may be referenced by other records.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "User deleted successfully!";
+                }
             }
             catch (Exception ex)
             {
