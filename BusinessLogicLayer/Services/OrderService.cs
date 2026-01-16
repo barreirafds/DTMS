@@ -267,6 +267,51 @@ public class OrderService : IOrderService
         }
     }
 
+    public List<OrderDTO> GetOrdersByDateRange(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            var orders = _orderRepository.GetOrdersByDateRange(startDate, endDate);
+            var ordersDto = new List<OrderDTO>();
+
+            foreach (var order in orders)
+            {
+                var items = _orderRepository.GetOrderItems(order.id);
+                var itemsDto = new List<OrderItemDTO>();
+
+                foreach (var item in items)
+                {
+                    var product = _productRepository.GetProduct(item.product_id);
+                    itemsDto.Add(new OrderItemDTO
+                    {
+                        Id = item.id,
+                        OrderId = item.order_id,
+                        ProductId = item.product_id,
+                        ProductName = product?.name ?? "Unknown",
+                        Quantity = item.qty,
+                        Price = item.price
+                    });
+                }
+
+                ordersDto.Add(new OrderDTO
+                {
+                    Id = order.id,
+                    TableId = order.table_id,
+                    UserId = order.user_id,
+                    Status = order.status,
+                    CreatedAt = order.created_at,
+                    Items = itemsDto
+                });
+            }
+
+            return ordersDto;
+        }
+        catch (Exception)
+        {
+            return new List<OrderDTO>();
+        }
+    }
+
     public ValidationResult UpdateOrderStatus(int orderId, string status)
     {
         if (orderId <= 0)

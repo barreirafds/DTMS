@@ -286,5 +286,34 @@ public class OrderRepository : IOrderRepository
             throw;
         }
     }
+
+    public List<order> GetOrdersByDateRange(DateTime startDate, DateTime endDate)
+    {
+        var orders = new List<order>();
+        using var conn = new SqlConnection(connString);
+        conn.Open();
+
+        // Set endDate to end of day (23:59:59) to include the entire day
+        var endDateWithTime = endDate.Date.AddDays(1).AddTicks(-1);
+
+        const string query = "SELECT [id], [table_id], [user_id], [status], [created_at] FROM [order] WHERE [created_at] >= @start_date AND [created_at] <= @end_date ORDER BY [created_at] DESC;";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@start_date", startDate.Date);
+        cmd.Parameters.AddWithValue("@end_date", endDateWithTime);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            orders.Add(new order
+            {
+                id = reader.GetInt32(reader.GetOrdinal("id")),
+                table_id = reader.GetInt32(reader.GetOrdinal("table_id")),
+                user_id = reader.GetInt32(reader.GetOrdinal("user_id")),
+                status = reader.GetString(reader.GetOrdinal("status")),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
+            });
+        }
+        return orders;
+    }
 }
 

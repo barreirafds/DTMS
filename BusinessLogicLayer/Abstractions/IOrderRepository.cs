@@ -11,6 +11,7 @@ public interface IOrderRepository
     order? GetOrder(int id);
     List<order> GetOrdersByTableId(int tableId);
     order? GetPendingOrderByTableId(int tableId);
+    List<order> GetOrdersByDateRange(DateTime startDate, DateTime endDate);
     List<order_item> GetOrderItems(int orderId);
     void UpdateOrderStatus(int orderId, string status);
     void DeleteOrdersByTableId(int tableId);

@@ -9,6 +9,7 @@ public interface IOrderService
     OrderDTO? GetOrderById(int id);
     List<OrderDTO> GetOrdersByTableId(int tableId);
     OrderDTO? GetPendingOrderByTableId(int tableId);
+    List<OrderDTO> GetOrdersByDateRange(DateTime startDate, DateTime endDate);
     ValidationResult UpdateOrderStatus(int orderId, string status);
 }
 

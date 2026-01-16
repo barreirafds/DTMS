@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -70,6 +71,17 @@ namespace DTMS.Pages
 
         [BindProperty]
         public string? ActiveTab { get; set; } = "tables";
+
+        // Reports Properties
+        [BindProperty]
+        public DateTime ReportStartDate { get; set; } = DateTime.Now.Date;
+
+        [BindProperty]
+        public DateTime ReportEndDate { get; set; } = DateTime.Now.Date;
+
+        public List<OrderDTO> ReportOrders { get; private set; } = new();
+
+        public bool ShowReport { get; private set; } = false;
 
         public string GetStatusBadgeStyle(string? status)
         {
@@ -397,6 +409,76 @@ namespace DTMS.Pages
             {
                 return new JsonResult(new { success = false, message = $"Error: {ex.Message}" }) { StatusCode = 500 };
             }
+        }
+
+        // Reports handlers
+        public IActionResult OnGetViewReport(DateTime? startDate, DateTime? endDate, string? tab = null)
+        {
+            if (!HasAccess())
+            {
+                TempData["ErrorMessage"] = "You do not have permission to access this page.";
+                return RedirectToPage("/Index");
+            }
+
+            // Load all data
+            TablesList = TableVMMappers.ToViewModelList(_tableService.GetAllTables());
+            UsersList = _userService.GetAllUsers();
+            ProductsList = _productService.GetAllProducts();
+
+            // Set date range (default to today if not provided)
+            if (startDate.HasValue)
+            {
+                ReportStartDate = startDate.Value;
+            }
+            if (endDate.HasValue)
+            {
+                ReportEndDate = endDate.Value;
+            }
+
+            // Ensure end date is not before start date
+            if (ReportEndDate < ReportStartDate)
+            {
+                ReportEndDate = ReportStartDate;
+            }
+
+            // Get orders for the date range
+            ReportOrders = _orderService.GetOrdersByDateRange(ReportStartDate, ReportEndDate);
+            ShowReport = true;
+
+            ViewData["ActiveTab"] = tab ?? "reports";
+            return Page();
+        }
+
+        public IActionResult OnPostDownloadReport(DateTime startDate, DateTime endDate)
+        {
+            if (!HasAccess())
+            {
+                TempData["ErrorMessage"] = "You do not have permission to download reports.";
+                return RedirectToPage("/Index");
+            }
+
+            // Get orders for the date range
+            var orders = _orderService.GetOrdersByDateRange(startDate, endDate);
+
+            // Generate CSV content
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Order ID,Table ID,User ID,Status,Created At,Items Count,Total");
+            
+            foreach (var order in orders)
+            {
+                csv.AppendLine($"{order.Id},{order.TableId},{order.UserId},{order.Status},\"{order.CreatedAt:yyyy-MM-dd HH:mm:ss}\",{order.Items.Count},{order.Total:F2}");
+            }
+
+            // Add summary row
+            var totalRevenue = orders.Sum(o => o.Total);
+            csv.AppendLine();
+            csv.AppendLine($"Total Orders,{orders.Count},Total Revenue,{totalRevenue:F2}€");
+
+            // Return CSV file
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            var fileName = $"Orders_Report_{startDate:yyyy-MM-dd}_to_{endDate:yyyy-MM-dd}.csv";
+            
+            return File(bytes, "text/csv", fileName);
         }
     }
 }
