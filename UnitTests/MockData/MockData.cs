@@ -38,7 +38,7 @@ public static class MockData
                 name = "Pizza Margherita",
                 description = "Traditional pizza with tomato and mozzarella",
                 price = 12.50m,
-                category = "Pizza",
+                category = "Food",
                 created_at = DateTime.Now
             },
             new product
@@ -47,7 +47,7 @@ public static class MockData
                 name = "Coca-Cola",
                 description = "Soft drink 330ml",
                 price = 2.50m,
-                category = "Drink",
+                category = "Beverage",
                 created_at = DateTime.Now
             },
             // Products for Table 2
@@ -57,7 +57,7 @@ public static class MockData
                 name = "Classic Burger",
                 description = "Burger with cheese and fries",
                 price = 8.90m,
-                category = "Fast Food",
+                category = "Food",
                 created_at = DateTime.Now
             },
             new product
@@ -66,7 +66,7 @@ public static class MockData
                 name = "Water",
                 description = "Mineral water 500ml",
                 price = 1.50m,
-                category = "Drink",
+                category = "Beverage",
                 created_at = DateTime.Now
             }
         };
