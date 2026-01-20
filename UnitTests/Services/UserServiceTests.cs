@@ -12,12 +12,14 @@ namespace UnitTests.Services;
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _mockUserRepository;
+    private readonly Mock<IOrderRepository> _mockOrderRepository;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _mockUserRepository = new Mock<IUserRepository>();
-        _userService = new UserService(_mockUserRepository.Object);
+        _mockOrderRepository = new Mock<IOrderRepository>();
+        _userService = new UserService(_mockUserRepository.Object, _mockOrderRepository.Object);
     }
 
     [Fact]
@@ -261,6 +263,10 @@ public class UserServiceTests
         // Arrange
         var userId = 1;
 
+        _mockOrderRepository
+            .Setup(repo => repo.GetOrderCountByUserId(userId))
+            .Returns(0);
+
         _mockUserRepository
             .Setup(repo => repo.DeleteUser(userId));
 
@@ -268,34 +274,71 @@ public class UserServiceTests
         _userService.DeleteUser(userId);
 
         // Assert
+        _mockOrderRepository.Verify(repo => repo.GetOrderCountByUserId(userId), Times.Once);
         _mockUserRepository.Verify(repo => repo.DeleteUser(userId), Times.Once);
     }
 
     [Fact]
-    public void DeleteUser_ShouldNotCallRepository_WhenIdIsZero()
+    public void DeleteUser_ShouldThrowArgumentException_WhenIdIsZero()
     {
         // Arrange
         var userId = 0;
 
         // Act
-        _userService.DeleteUser(userId);
+        Action act = () => _userService.DeleteUser(userId);
 
         // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("Invalid user ID. ID must be greater than 0. (Parameter 'id')");
+        
+        _mockOrderRepository.Verify(
+            repo => repo.GetOrderCountByUserId(It.IsAny<int>()),
+            Times.Never);
         _mockUserRepository.Verify(
             repo => repo.DeleteUser(It.IsAny<int>()),
             Times.Never);
     }
 
     [Fact]
-    public void DeleteUser_ShouldNotCallRepository_WhenIdIsNegative()
+    public void DeleteUser_ShouldThrowArgumentException_WhenIdIsNegative()
     {
         // Arrange
         var userId = -1;
 
         // Act
-        _userService.DeleteUser(userId);
+        Action act = () => _userService.DeleteUser(userId);
 
         // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("Invalid user ID. ID must be greater than 0. (Parameter 'id')");
+        
+        _mockOrderRepository.Verify(
+            repo => repo.GetOrderCountByUserId(It.IsAny<int>()),
+            Times.Never);
+        _mockUserRepository.Verify(
+            repo => repo.DeleteUser(It.IsAny<int>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public void DeleteUser_ShouldThrowInvalidOperationException_WhenUserHasAssociatedOrders()
+    {
+        // Arrange
+        var userId = 1;
+        var orderCount = 5;
+
+        _mockOrderRepository
+            .Setup(repo => repo.GetOrderCountByUserId(userId))
+            .Returns(orderCount);
+
+        // Act
+        Action act = () => _userService.DeleteUser(userId);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage($"Cannot delete user. This user has {orderCount} order(s) associated. Please delete or reassign the orders first.");
+        
+        _mockOrderRepository.Verify(repo => repo.GetOrderCountByUserId(userId), Times.Once);
         _mockUserRepository.Verify(
             repo => repo.DeleteUser(It.IsAny<int>()),
             Times.Never);
