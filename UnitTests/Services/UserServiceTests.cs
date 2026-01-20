@@ -270,12 +270,29 @@ public class UserServiceTests
         _mockUserRepository
             .Setup(repo => repo.DeleteUser(userId));
 
+        //var UserBefore = _mockUserRepository
+        //    .Object
+        //    .GetUsers()
+        //    .Count;
+
         // Act
         _userService.DeleteUser(userId);
 
-        // Assert
+        //var UserAfter = _mockUserRepository
+        //    .Object
+        //    .GetUsers()
+        //    .Count;
+
+        // Assert need to ask to a teacher about this
+        //Assert.Equal(UserBefore - 1, UserAfter);
+        //Assert.DoesNotContain(
+        //    _mockUserRepository
+        //        .Object
+        //        .GetUsers(),
+        //    u => u.id == userId);
         _mockOrderRepository.Verify(repo => repo.GetOrderCountByUserId(userId), Times.Once);
         _mockUserRepository.Verify(repo => repo.DeleteUser(userId), Times.Once);
+;
     }
 
     [Fact]
